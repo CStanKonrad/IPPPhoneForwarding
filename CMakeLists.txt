@@ -21,6 +21,11 @@ set(CMAKE_C_FLAGS "-std=c11 -Wall -Wextra")
 
 # Wskazujemy pliki źródłowe.
 set(SOURCE_FILES
+    src/stdfunc.h
+    src/vector.h
+    src/vector.c
+    src/list.h
+    src/list.c
     src/phone_forward.c
     src/phone_forward.h
     src/phone_forward_example.c)
