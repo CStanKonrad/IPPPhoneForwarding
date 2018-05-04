@@ -45,7 +45,7 @@ int radixTreeFind(RadixTree tree, const char *txt, RadixTreeNode *ptr,
 
 RadixTreeNode radixTreeInsert(RadixTree tree, const char *txt);
 
-void radixTreeEmptyFunction(void *ptrA, void *ptrB);
+void radixTreeEmptyDelFunction(void *ptrA, void *ptrB);
 
 void radixTreeDeleteSubTree(RadixTreeNode subTreeNode,
                             void (*f)(void *, void *),
@@ -54,6 +54,8 @@ void radixTreeDeleteSubTree(RadixTreeNode subTreeNode,
 void radixTreeDelete(RadixTree tree, void (*f)(void *, void *), void *fData);
 
 void *radixTreeGetNodeData(RadixTreeNode node);
+
+void radixTreeSetData(RadixTreeNode node, void *ptr);
 
 RadixTreeNode radixTreeFather(RadixTreeNode node);
 

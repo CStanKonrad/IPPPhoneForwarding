@@ -308,6 +308,7 @@ void radixTreeDeleteSubTree(RadixTreeNode subTreeNode,
         if (*i == RADIX_TREE_NUMBER_OF_SONS) {
             if (pos->data != NULL) {
                 f(pos->data, fData);
+                pos->data = NULL;
             }
             tmp = pos;
             pos = pos->father;
@@ -324,6 +325,7 @@ void radixTreeDeleteSubTree(RadixTreeNode subTreeNode,
 
     if (subTreeNode->data != NULL) {
         f(subTreeNode->data, fData);
+        subTreeNode->data = NULL;
     }
     if (!radixTreeIsRoot(subTreeNode)) {
         radixTreeChangeSon(subTreeNode->father, *subTreeNode->txt, NULL);
@@ -335,7 +337,7 @@ void radixTreeDelete(RadixTree tree, void (*f)(void *, void *), void *fData) {
     radixTreeDeleteSubTree(tree, f, fData);
 }
 
-void radixTreeEmptyFunction(void *ptrA, void *ptrB) {
+void radixTreeEmptyDelFunction(void *ptrA, void *ptrB) {
 
 }
 
@@ -382,8 +384,11 @@ static void radixTreeMerge(RadixTreeNode a, RadixTreeNode b) {
 
 void radixTreeBalance(RadixTreeNode node) {
     RadixTreeNode pos = node, tmp;
+    size_t skipped = 0;
+    const size_t canSkip = 5;
 
-    while (!radixTreeIsRoot(pos)) {
+    while (!radixTreeIsRoot(pos)
+            && skipped <= canSkip) {
         if (radixTreeIsNodeRedundant(pos)) {
             tmp = pos;
             pos = pos->father;
@@ -394,9 +399,14 @@ void radixTreeBalance(RadixTreeNode node) {
             radixTreeMerge(tmp, radixTreeFristSon(tmp));
         } else {
             pos = pos->father;
+            skipped++;
         }
     }
 
+}
+
+void radixTreeSetData(RadixTreeNode node, void *ptr) {
+    node->data = ptr;
 }
 
 
