@@ -29,4 +29,8 @@
  */
 #define STR(x) TO_STRING(x)
 
+void copyText(const char *src, char * dest, size_t length);
+
+const char *stringEnd(const char *str);
+
 #endif //TELEFONY_STDFUNC_H
