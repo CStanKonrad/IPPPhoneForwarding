@@ -109,6 +109,33 @@ static int radixTreeHasSon(RadixTreeNode node, char son) {
     return node->sons[radixTreeConvertCharToNumber(son)] != NULL;
 }
 
+static size_t radixTreeHowManySons(RadixTreeNode node) {
+    size_t result = 0;
+    size_t i;
+    for (i = 0; i < RADIX_TREE_NUMBER_OF_SONS; i++) {
+        if (node->sons[i] != NULL) {
+            result++;
+        }
+    }
+    return result;
+}
+
+static int radixTreeHasSons(RadixTreeNode node) {
+    return radixTreeHowManySons(node) == 0;
+}
+
+static int radixTreeIsNodeRedundant(RadixTreeNode node) {
+    return  (!radixTreeIsRoot(node)) &&
+            (!radixTreeHasSons(node)) &&
+            node->data == NULL;
+}
+
+static int radixTreeCanBeMergedWithSon(RadixTreeNode node) {
+    return  (!radixTreeIsRoot(node)) &&
+            radixTreeHowManySons(node) == 1 &&
+            node->data == NULL;
+}
+
 static void radixTreeMoveToSon(RadixTreeNode *ptr, char son) {
     assert(radixTreeHasSon(*ptr, son));
     *ptr = (*ptr)->sons[radixTreeConvertCharToNumber(son)];
@@ -312,9 +339,66 @@ void radixTreeEmptyFunction(void *ptrA, void *ptrB) {
 
 }
 
-void *radixGetNodeData(RadixTreeNode node) {
+void *radixTreeGetNodeData(RadixTreeNode node) {
     return node->data;
 }
+
+RadixTreeNode radixTreeFather(RadixTreeNode node) {
+    return node->father;
+}
+
+static RadixTreeNode radixTreeFristSon(RadixTreeNode node) {
+    size_t i;
+    for (i = 0; i < RADIX_TREE_NUMBER_OF_SONS; i++) {
+        if (node->sons[i] != NULL) {
+            return node->sons[i];
+        }
+    }
+    return NULL;
+}
+
+static void radixTreeMerge(RadixTreeNode a, RadixTreeNode b) {
+
+    size_t aTextLength = strlen(a->txt);
+    size_t bTextLength = strlen(b->txt);
+    size_t textLength =  aTextLength + bTextLength;
+    char *txt = malloc(textLength + (size_t)1);
+
+    if (txt == NULL) {
+        return;
+    } else {
+        copyText(a->txt, txt, aTextLength);
+        copyText(b->txt, txt + aTextLength, bTextLength);
+        b->txt = txt;
+
+        b->father = a->father;
+        radixTreeChangeSon(a->father, *a->txt, b);
+        radixTreeFreeNode(a);
+    }
+
+
+
+}
+
+void radixTreeBalance(RadixTreeNode node) {
+    RadixTreeNode pos = node, tmp;
+
+    while (!radixTreeIsRoot(pos)) {
+        if (radixTreeIsNodeRedundant(pos)) {
+            tmp = pos;
+            pos = pos->father;
+            radixTreeFreeNode(tmp);
+        } else if (radixTreeCanBeMergedWithSon(node)) {
+            tmp = pos;
+            pos = pos->father;
+            radixTreeMerge(tmp, radixTreeFristSon(tmp));
+        } else {
+            pos = pos->father;
+        }
+    }
+
+}
+
 
 
 

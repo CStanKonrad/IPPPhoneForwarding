@@ -53,7 +53,11 @@ void radixTreeDeleteSubTree(RadixTreeNode subTreeNode,
 
 void radixTreeDelete(RadixTree tree, void (*f)(void *, void *), void *fData);
 
-void *radixGetNodeData(RadixTreeNode node);
+void *radixTreeGetNodeData(RadixTreeNode node);
+
+RadixTreeNode radixTreeFather(RadixTreeNode node);
+
+void radixTreeBalance(RadixTreeNode node);
 
 
 #endif //TELEFONY_RADIX_TREE_H
