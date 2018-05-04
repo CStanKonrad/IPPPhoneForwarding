@@ -14,7 +14,7 @@
 #include "stdfunc.h"
 
 
-static int radixTreeIsRoot(RadixTreeNode node) {
+int radixTreeIsRoot(RadixTreeNode node) {
     return node->txt != NULL && strcmp(node->txt, RADIX_TREE_ROOT_TXT) == 0;
 }
 
@@ -39,7 +39,7 @@ static void radixTreeInitNode(RadixTreeNode node) {
 
 static void radixTreeFreeNode(RadixTreeNode node) {
     if (!radixTreeIsRoot(node)) {
-        assert(node->data == NULL)
+        assert(node->data == NULL);
         if (node->txt != NULL) {
             free((void *) node->txt);
             node->txt = NULL;
@@ -202,6 +202,14 @@ int radixTreeFind(RadixTree tree, const char *txt, RadixTreeNode *ptr,
     }
 }
 
+size_t radixTreeHowManyCharsOffset(RadixTreeNode node, const char *txt) {
+    return (txt - node->txt);
+}
+
+size_t radixTreeHowManyChars(RadixTreeNode node) {
+    return strlen(node->txt);
+}
+
 static int radixTreeSplitNode(RadixTreeNode node, const char *splitPtr) {
     RadixTreeNode newNode = radixTreeCreateNode();
 
@@ -303,7 +311,7 @@ void radixTreeDeleteSubTree(RadixTreeNode subTreeNode,
     RadixTreeNode pos = subTreeNode, tmp;
     pos->foldI = 0;
 
-    while (!(radixTreeIsRoot(pos)
+    while (!(pos == subTreeNode
              && pos->foldI == RADIX_TREE_NUMBER_OF_SONS)) {
         size_t *i = &pos->foldI;
         if (*i == RADIX_TREE_NUMBER_OF_SONS) {
@@ -361,7 +369,7 @@ static RadixTreeNode radixTreeFristSon(RadixTreeNode node) {
     return NULL;
 }
 
-static void radixTreeMerge(RadixTreeNode a, RadixTreeNode b) {
+static int radixTreeMerge(RadixTreeNode a, RadixTreeNode b) {
 
     size_t aTextLength = strlen(a->txt);
     size_t bTextLength = strlen(b->txt);
@@ -369,7 +377,7 @@ static void radixTreeMerge(RadixTreeNode a, RadixTreeNode b) {
     char *txt = malloc(textLength + (size_t)1);
 
     if (txt == NULL) {
-        return;
+        return RADIX_TREE_OPERATION_FAIL;
     } else {
         copyText(a->txt, txt, aTextLength);
         copyText(b->txt, txt + aTextLength, bTextLength);
@@ -399,10 +407,13 @@ void radixTreeBalance(RadixTreeNode node) {
             pos = pos->father;
             radixTreeChangeSon(pos, *tmp->txt, NULL);
             radixTreeFreeNode(tmp);
-        } else if (radixTreeCanBeMergedWithSon(node)) {
+        } else if (radixTreeCanBeMergedWithSon(pos)) {
             tmp = pos;
             pos = pos->father;
-            radixTreeMerge(tmp, radixTreeFristSon(tmp));
+            int mergeResult =radixTreeMerge(tmp, radixTreeFristSon(tmp));
+            if (mergeResult != RADIX_TREE_OPERATION_SUCCESS) {
+                skipped++;
+            }
         } else {
             pos = pos->father;
             skipped++;
@@ -413,6 +424,41 @@ void radixTreeBalance(RadixTreeNode node) {
 
 void radixTreeSetData(RadixTreeNode node, void *ptr) {
     node->data = ptr;
+}
+
+int radixTreeFindLite(RadixTree tree, const char *txt, RadixTreeNode *ptr) {
+    const char *unused1;
+    const char *unused2;
+    return radixTreeFind(tree, txt, ptr, &unused1, &unused2);
+}
+
+char *radixGetFullText(RadixTreeNode node) {
+    RadixTreeNode pos = node;
+    size_t length = 0;
+
+    while (!radixTreeIsRoot(pos)) {
+        length += radixTreeHowManyChars(pos);
+        pos = radixTreeFather(pos);
+    }
+
+    char *result = malloc(length + (size_t) 1);
+    if (result == NULL) {
+        return NULL;
+    } else {
+        result[length] = '\0';
+        pos = node;
+        while (!radixTreeIsRoot(pos)) {
+            size_t len = strlen(pos->txt);
+            size_t i;
+            length -= len;
+            for (i = 0; i < len; i++) {
+                result[length + i] = pos->txt[i];
+            }
+            pos = radixTreeFather(pos);
+        }
+        return result;
+    }
+
 }
 
 

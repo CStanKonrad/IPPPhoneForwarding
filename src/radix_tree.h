@@ -40,8 +40,16 @@ struct RadixTreeNode {
  */
 RadixTree radixTreeCreate();
 
+int radixTreeIsRoot(RadixTreeNode node);
+
+size_t radixTreeHowManyCharsOffset(RadixTreeNode node, const char *txt);
+
+size_t radixTreeHowManyChars(RadixTreeNode node);
+
 int radixTreeFind(RadixTree tree, const char *txt, RadixTreeNode *ptr,
                   const char **txtMatchPtr, const char **nodeMatchPtr);
+
+int radixTreeFindLite(RadixTree tree, const char *txt, RadixTreeNode *ptr);
 
 RadixTreeNode radixTreeInsert(RadixTree tree, const char *txt);
 
@@ -61,5 +69,7 @@ RadixTreeNode radixTreeFather(RadixTreeNode node);
 
 void radixTreeBalance(RadixTreeNode node);
 
+
+char *radixGetFullText(RadixTreeNode node);
 
 #endif //TELEFONY_RADIX_TREE_H
