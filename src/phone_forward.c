@@ -1,6 +1,8 @@
 
 #include <assert.h>
 #include <string.h>
+#include <stdint.h>
+#include <stdio.h>
 #include "phone_forward.h"
 #include "radix_tree.h"
 #include "list.h"
@@ -38,20 +40,8 @@ static struct PhoneNumbers *phfwdCreatePhoneNumbersStructure(size_t howMany) {
 }
 
 static struct PhoneNumbers *phfwdEmptySequenceResult() {
-    struct PhoneNumbers *result = phfwdCreatePhoneNumbersStructure(1);
-    if (result == NULL) {
-        return NULL;
-    } else {
-        char *emptySeq = malloc(sizeof(char));
-        if (emptySeq == NULL) {
-            return NULL;
-        } else {
-            *emptySeq = '\0';
-            result->numbers[0] = emptySeq;
-            return result;
-        }
-        return result;
-    }
+    struct PhoneNumbers *result = phfwdCreatePhoneNumbersStructure(0);
+    return result;
 }
 
 
@@ -204,7 +194,7 @@ static bool phfwdPrepareNodes(RadixTreeNode fwInsert, RadixTreeNode bwInsert) {
 }
 
 static bool phfwdIsNumber(char const *num1) {
-    if (*num1 == '\0') {
+    if (num1 == NULL || *num1 == '\0') {
         return false;
     } else {
         char const *ptr = num1;
@@ -256,16 +246,30 @@ void phfwdRemove(struct PhoneForward *pf, char const *num) {
     }
 }
 
+static void phfwdSetPointersForGettingText(RadixTree tree,
+                                           char const *num,
+                                           RadixTreeNode *ptr,
+                                           char const **matchedTxt,
+                                           char const **nodeMatched) {
+    int findResult = radixTreeFind(tree, num, ptr, matchedTxt, nodeMatched);
+    if (findResult != RADIX_TREE_FOUND
+        && (*(*nodeMatched) != '\0')) {
+        *matchedTxt = (*matchedTxt) - radixTreeHowManyCharsOffset(*ptr, *nodeMatched);
+        *ptr = radixTreeFather(*ptr);
+    }
+}
+
 static char const *phfwdGetNumber(RadixTree forward, char const *num) {
     RadixTreeNode ptr;
     const char *matchedTxt;
     const char *nodeMatched;
-    int findResult = radixTreeFind(forward, num, &ptr, &matchedTxt, &nodeMatched);
+    /*int findResult = radixTreeFind(forward, num, &ptr, &matchedTxt, &nodeMatched);
     if (findResult != RADIX_TREE_FOUND
-            && (*nodeMatched != '\0')) {
+        && (*nodeMatched != '\0')) {
         matchedTxt = matchedTxt - radixTreeHowManyCharsOffset(ptr, nodeMatched);
         ptr = radixTreeFather(ptr);
-    }
+    }*/
+    phfwdSetPointersForGettingText(forward, num, &ptr, &matchedTxt, &nodeMatched);
 
     while (!radixTreeIsRoot(ptr) && radixTreeGetNodeData(ptr) == NULL) {
         matchedTxt = matchedTxt - radixTreeHowManyChars(ptr);
@@ -274,20 +278,23 @@ static char const *phfwdGetNumber(RadixTree forward, char const *num) {
     char *result = NULL;
     if (radixTreeIsRoot(ptr)) {
         assert(matchedTxt == num);
-        result = malloc(strlen(matchedTxt) + (size_t)1);
+        result = malloc(strlen(matchedTxt) + (size_t) 1);
         if (result == NULL) {
             return NULL;
         } else {
             strcpy(result, matchedTxt);
         }
     } else {
-        ForwardData fd = (ForwardData )radixTreeGetNodeData(ptr);
+        ForwardData fd = (ForwardData) radixTreeGetNodeData(ptr);
         assert(fd != NULL);
         char *prefix = radixGetFullText(fd->treeNode);
         if (prefix == NULL) {
             return NULL;
         } else {
-            result = malloc(strlen(prefix) + strlen(matchedTxt) + (size_t)1);
+            result = concatenate(prefix, matchedTxt);
+            free(prefix);
+            return result;
+            /*result = malloc(strlen(prefix) + strlen(matchedTxt) + (size_t) 1);
             if (result == NULL) {
                 free(prefix);
                 return NULL;
@@ -296,7 +303,7 @@ static char const *phfwdGetNumber(RadixTree forward, char const *num) {
                 strcpy(result + strlen(prefix), matchedTxt);
                 free(prefix);
                 return result;
-            }
+            }*/
 
         }
     }
@@ -316,7 +323,7 @@ struct PhoneNumbers const *phfwdGet(struct PhoneForward *pf, char const *num) {
                 phnumDelete(result);
                 return NULL;
             } else {
-                result->numbers[0] = (char*)number;
+                result->numbers[0] = (char *) number;
                 return result;
             }
         }
@@ -344,6 +351,93 @@ char const *phnumGet(struct PhoneNumbers const *pnum, size_t idx) {
         return NULL;
     } else {
         return pnum->numbers[idx];
+    }
+}
+
+static size_t phfwdHowManyRedirections(RadixTreeNode node) {
+    size_t result = 1;
+    RadixTreeNode pos = node;
+
+    while (!radixTreeIsRoot(pos)) {
+        if (radixTreeGetNodeData(pos) != NULL) {
+            List list = radixTreeGetNodeData(pos);
+            result += listSize(list, SIZE_MAX);
+        }
+        pos = radixTreeFather(pos);
+    }
+    return result;
+}
+
+static bool phfwdAddRedir(struct PhoneNumbers *storage,
+                          RadixTreeNode node,
+                          char const *matchedTxt) {
+    RadixTreeNode pos = node;
+    size_t insertPtr = 0;
+    while (!radixTreeIsRoot(pos)) {
+        if (radixTreeGetNodeData(pos) != NULL) {
+            List list = radixTreeGetNodeData(pos);
+            ListNode p = listFirstNode(list);
+            while (p != NULL) {
+                char *prefix = radixGetFullText(p->element);
+                if (prefix == NULL) {
+                    return false;
+                } else {
+                    char *toAdd = concatenate(prefix, matchedTxt);
+                    free(prefix);
+                    if (toAdd == NULL) {
+                        return false;
+                    } else {
+                        storage->numbers[insertPtr] = toAdd;
+                        insertPtr++;
+                    }
+                }
+                p = listNextNode(p);
+            }
+        }
+        matchedTxt = matchedTxt - radixTreeHowManyChars(pos);
+        pos = radixTreeFather(pos);
+
+    }
+    char *toAdd = duplicateText(matchedTxt);
+    if (toAdd == NULL) {
+        return false;
+    } else {
+        storage->numbers[insertPtr] = toAdd;
+        insertPtr++;
+    }
+    return true;
+}
+
+static struct PhoneNumbers const *phfwdGetReverse(RadixTree backward, char const *num) {
+    RadixTreeNode ptr;
+    const char *matchedTxt;
+    const char *nodeMatched;
+    phfwdSetPointersForGettingText(backward, num, &ptr, &matchedTxt, &nodeMatched);
+
+    size_t numberOfRedirections = phfwdHowManyRedirections(ptr);
+    printf("eeee:%d\n", numberOfRedirections);
+
+    struct PhoneNumbers *result = phfwdCreatePhoneNumbersStructure(numberOfRedirections);
+    if (result == NULL) {
+        return NULL;
+    } else {
+        if(!phfwdAddRedir(result, ptr, matchedTxt)) {
+            phnumDelete(result);
+            return NULL;
+        } else {
+            //todo sort and unique
+            return result;
+        }
+    }
+
+
+}
+
+struct PhoneNumbers const *phfwdReverse(struct PhoneForward *pf, char const *num) {
+    if (!phfwdIsNumber(num)) {
+        return phfwdEmptySequenceResult();
+    } else {
+        return phfwdGetReverse(pf->backward, num);
     }
 }
 
