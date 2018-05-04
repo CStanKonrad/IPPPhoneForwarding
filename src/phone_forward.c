@@ -408,6 +408,93 @@ static bool phfwdAddRedir(struct PhoneNumbers *storage,
     return true;
 }
 
+
+static bool phfwdPrepareForSort(RadixTree *tree, size_t **ids,
+                                struct PhoneNumbers const *out) {
+    *tree = radixTreeCreate();
+    if (*tree == NULL) {
+        return false;
+    } else {
+        *ids = malloc(out->howMany * sizeof(size_t));
+        if (*ids == NULL) {
+            radixTreeDelete(*tree, radixTreeEmptyDelFunction, NULL);
+            return false;
+        } else {
+            size_t i;
+            for (i = 0; i < out->howMany; i++) {
+                (*ids)[i] = i;
+            }
+            return true;
+        }
+    }
+}
+
+static bool phfwdRadixSortOutAddToTree(RadixTree tree, size_t *ids,
+                                       struct PhoneNumbers const *out) {
+    size_t i;
+    for (i = 0; i < out->howMany; i++) {
+        RadixTreeNode ptr = radixTreeInsert(tree, out->numbers[i]);
+        if (ptr == NULL) {
+            return false;
+        } else {
+            radixTreeSetData(ptr, &ids[i]);
+        }
+    }
+    return true;
+}
+
+struct SortFoldData {
+    struct PhoneNumbers *newOut;
+    const struct PhoneNumbers *oldOut;
+    size_t process;
+
+};
+
+static void phfwdRadixSortOutOrganize(void *data, void *fData) {
+    struct SortFoldData *sfd = (struct SortFoldData *)fData;
+    size_t *id = (size_t *)data;
+    sfd->newOut->numbers[sfd->process] = sfd->oldOut->numbers[*id];
+    sfd->process++;
+    sfd->oldOut->numbers[*id] = NULL;
+}
+
+static bool phfwdRadixSortOut(struct PhoneNumbers **out) {
+    RadixTree tree;
+    size_t *ids;
+    if (phfwdPrepareForSort(&tree, &ids, *out)) {
+        if (phfwdRadixSortOutAddToTree(tree, ids, *out)) {
+            size_t howManyUnique = 0;
+            radixTreeFold(tree, radixTreeEmptyCountDataFunction, &howManyUnique);
+            struct PhoneNumbers *newOut = phfwdCreatePhoneNumbersStructure(howManyUnique);
+
+            if (newOut == NULL) {
+                free(ids);
+                radixTreeDelete(tree, radixTreeEmptyDelFunction, NULL);
+                return false;
+            } else {
+                struct SortFoldData sfd;
+                sfd.oldOut = *out;
+                sfd.newOut = newOut;
+                sfd.process = 0;
+                radixTreeFold(tree, phfwdRadixSortOutOrganize, &sfd);
+                phnumDelete(*out);
+                *out = newOut;
+                free(ids);
+                radixTreeDelete(tree, radixTreeEmptyDelFunction, NULL);
+
+
+            }
+        } else {
+            free(ids);
+            radixTreeDelete(tree, radixTreeEmptyDelFunction, NULL);
+            return false;
+        }
+
+    } else {
+        return false;
+    }
+}
+
 static struct PhoneNumbers const *phfwdGetReverse(RadixTree backward, char const *num) {
     RadixTreeNode ptr;
     const char *matchedTxt;
@@ -415,7 +502,7 @@ static struct PhoneNumbers const *phfwdGetReverse(RadixTree backward, char const
     phfwdSetPointersForGettingText(backward, num, &ptr, &matchedTxt, &nodeMatched);
 
     size_t numberOfRedirections = phfwdHowManyRedirections(ptr);
-    printf("eeee:%d\n", numberOfRedirections);
+    //printf("eeee:%d\n", numberOfRedirections);
 
     struct PhoneNumbers *result = phfwdCreatePhoneNumbersStructure(numberOfRedirections);
     if (result == NULL) {
@@ -426,12 +513,16 @@ static struct PhoneNumbers const *phfwdGetReverse(RadixTree backward, char const
             return NULL;
         } else {
             //todo sort and unique
+            phfwdRadixSortOut(&result);
             return result;
         }
     }
 
 
 }
+
+
+
 
 struct PhoneNumbers const *phfwdReverse(struct PhoneForward *pf, char const *num) {
     if (!phfwdIsNumber(num)) {
