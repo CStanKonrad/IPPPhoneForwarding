@@ -389,6 +389,8 @@ static int radixTreeMerge(RadixTreeNode a, RadixTreeNode b) {
         b->father = a->father;
         radixTreeChangeSon(a->father, *b->txt, b);
         radixTreeFreeNode(a);
+
+        return RADIX_TREE_OPERATION_SUCCESS;
     }
 
 
@@ -463,7 +465,7 @@ char *radixGetFullText(RadixTreeNode node) {
 
 void radixTreeFold(RadixTree tree, void (*f)(void *, void *), void *fData) {
 
-    RadixTreeNode pos = tree, tmp;
+    RadixTreeNode pos = tree;
     pos->foldI = 0;
 
     while (!(pos == tree

@@ -141,7 +141,7 @@ struct ForwardData {
     ListNode listNode;
 };
 
-static int phfwdPrepareClean(RadixTreeNode fwInsert, RadixTreeNode bwInsert) {
+static void phfwdPrepareClean(RadixTreeNode fwInsert, RadixTreeNode bwInsert) {
 
     radixTreeBalance(bwInsert);
     radixTreeBalance(fwInsert);
@@ -165,6 +165,7 @@ static bool phfwdPrepareNodes(RadixTreeNode fwInsert, RadixTreeNode bwInsert) {
     ListNode newNode = phfwdPrepareBw(bwInsert, fwInsert);
     if (newNode == NULL) {
         phfwdPrepareClean(fwInsert, bwInsert);
+        return false;
     } else {
         ForwardData fd = malloc(sizeof(struct ForwardData));
         if (fd == NULL) {
@@ -175,6 +176,7 @@ static bool phfwdPrepareNodes(RadixTreeNode fwInsert, RadixTreeNode bwInsert) {
                 radixTreeSetData(bwInsert, NULL);
             }
             phfwdPrepareClean(fwInsert, bwInsert);
+            return false;
         } else {
             ForwardData old = radixTreeGetNodeData(fwInsert);
             if (old != NULL) {
@@ -186,6 +188,8 @@ static bool phfwdPrepareNodes(RadixTreeNode fwInsert, RadixTreeNode bwInsert) {
             fd->treeNode = bwInsert;
             fd->listNode = newNode;
             radixTreeSetData(fwInsert, fd);
+
+            return true;
 
         }
     }
@@ -284,6 +288,7 @@ static char const *phfwdGetNumber(RadixTree forward, char const *num) {
             return NULL;
         } else {
             strcpy(result, matchedTxt);
+            return result;
         }
     } else {
         ForwardData fd = (ForwardData) radixTreeGetNodeData(ptr);
@@ -483,6 +488,7 @@ static bool phfwdRadixSortOut(struct PhoneNumbers **out) {
                 free(ids);
                 radixTreeDelete(tree, radixTreeEmptyDelFunction, NULL);
 
+                return true;
 
             }
         } else {
@@ -513,7 +519,6 @@ static struct PhoneNumbers const *phfwdGetReverse(RadixTree backward, char const
             phnumDelete(result);
             return NULL;
         } else {
-            //todo sort and unique
             phfwdRadixSortOut(&result);
             return result;
         }
