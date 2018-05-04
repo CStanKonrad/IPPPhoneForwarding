@@ -31,6 +31,10 @@
 
 void copyText(const char *src, char * dest, size_t length);
 
+char *duplicateText(const char *txt);
+
 const char *stringEnd(const char *str);
+
+char *concatenate(const char *a, const char *b);
 
 #endif //TELEFONY_STDFUNC_H
