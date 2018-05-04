@@ -209,7 +209,8 @@ static bool phfwdIsNumber(char const *num1) {
 }
 
 bool phfwdAdd(struct PhoneForward *pf, char const *num1, char const *num2) {
-    if (!phfwdIsNumber(num1) || !phfwdIsNumber(num2)) {
+    if (!phfwdIsNumber(num1) || !phfwdIsNumber(num2)
+            || strcmp(num1, num2) == 0) {
         return false;
     } else {
         RadixTree fwInsert;

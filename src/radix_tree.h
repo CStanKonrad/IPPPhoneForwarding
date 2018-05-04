@@ -9,6 +9,7 @@
 
 #ifndef TELEFONY_RADIX_TREE_H
 #define TELEFONY_RADIX_TREE_H
+#include <stddef.h>
 
 #define RADIX_TREE_NUMBER_OF_SONS 10
 #define RADIX_TREE_ROOT_TXT "r"

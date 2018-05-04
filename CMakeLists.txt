@@ -24,6 +24,7 @@ set(CMAKE_C_FLAGS "-std=c11 -Wall -Wextra")
 #src/phone_forward.h
 #src/phone_forward_example.c
 set(SOURCE_FILES
+        src/phone_forward.c src/phone_forward.h
     src/stdfunc.h
     src/vector.h
     src/list.h

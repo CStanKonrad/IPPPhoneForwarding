@@ -7,6 +7,7 @@
 
 #ifndef TELEFONY_STDFUNC_H
 #define TELEFONY_STDFUNC_H
+#include <stddef.h>
 
 /**
  * @brief Zwraca minimum z dwóch wartości.
