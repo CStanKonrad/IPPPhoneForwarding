@@ -10,11 +10,12 @@
 #define TELEFONY_LIST_H
 
 #include <stddef.h>
+#include "radix_tree.h"
 
 /**
  * @brief Typ elementów przechowywanych w liście.
  */
-#define LIST_ELEMENT_TYPE int
+#define LIST_ELEMENT_TYPE RadixTreeNode
 
 /**
  * @brief Wskaźnik na listę.
