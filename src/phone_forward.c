@@ -112,16 +112,9 @@ struct ForwardData {
 };
 
 static int phfwdPrepareClean(RadixTreeNode fwInsert, RadixTreeNode bwInsert) {
-    bool wasFwEmpty = false;
-    if (radixTreeGetNodeData(fwInsert) == NULL) {
-        wasFwEmpty = true;
-        radixTreeSetData(fwInsert, !NULL);
-    }
+
     radixTreeBalance(bwInsert);
-    if (wasFwEmpty) {
-        radixTreeSetData(fwInsert, NULL);
-        radixTreeBalance(fwInsert);
-    }
+    radixTreeBalance(fwInsert);
 }
 
 static bool phfwdPrepareNodes(RadixTreeNode fwInsert, RadixTreeNode bwInsert) {
