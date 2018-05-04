@@ -188,3 +188,4 @@ bool phfwdAdd(struct PhoneForward *pf, char const *num1, char const *num2) {
     }
 
 }
+
