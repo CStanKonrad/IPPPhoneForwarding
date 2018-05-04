@@ -55,6 +55,8 @@ RadixTreeNode radixTreeInsert(RadixTree tree, const char *txt);
 
 void radixTreeEmptyDelFunction(void *ptrA, void *ptrB);
 
+void radixTreeEmptyCountDataFunction(void *ptrA, void *ptrB);
+
 void radixTreeDeleteSubTree(RadixTreeNode subTreeNode,
                             void (*f)(void *, void *),
                             void *fData);
@@ -71,5 +73,7 @@ void radixTreeBalance(RadixTreeNode node);
 
 
 char *radixGetFullText(RadixTreeNode node);
+
+void radixTreeFold(RadixTree tree, void (*f)(void *, void *), void *fData);
 
 #endif //TELEFONY_RADIX_TREE_H

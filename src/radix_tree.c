@@ -461,6 +461,37 @@ char *radixGetFullText(RadixTreeNode node) {
 
 }
 
+void radixTreeFold(RadixTree tree, void (*f)(void *, void *), void *fData) {
 
+    RadixTreeNode pos = tree, tmp;
+    pos->foldI = 0;
+
+    while (!(pos == tree
+             && pos->foldI == RADIX_TREE_NUMBER_OF_SONS)) {
+        size_t *i = &pos->foldI;
+        if (*i == 0) {
+            if (pos->data != NULL) {
+                f(pos->data, fData);
+            }
+        }
+
+        if (*i == RADIX_TREE_NUMBER_OF_SONS) {
+            pos = pos->father;
+
+        } else {
+            if (pos->sons[*i] != NULL) {
+                pos = pos->sons[*i];
+                pos->foldI = 0;
+            }
+            (*i)++;
+        }
+    }
+}
+
+void radixTreeEmptyCountDataFunction(void *ptrA, void *ptrB) {
+    size_t *counter = (size_t *) ptrB;
+    assert(ptrA != NULL);
+    (*counter)++;
+}
 
 
