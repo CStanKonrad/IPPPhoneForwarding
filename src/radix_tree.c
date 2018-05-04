@@ -39,6 +39,7 @@ static void radixTreeInitNode(RadixTreeNode node) {
 
 static void radixTreeFreeNode(RadixTreeNode node) {
     if (!radixTreeIsRoot(node)) {
+        assert(node->data == NULL)
         if (node->txt != NULL) {
             free((void *) node->txt);
             node->txt = NULL;
@@ -121,7 +122,7 @@ static size_t radixTreeHowManySons(RadixTreeNode node) {
 }
 
 static int radixTreeHasSons(RadixTreeNode node) {
-    return radixTreeHowManySons(node) == 0;
+    return radixTreeHowManySons(node) != 0;
 }
 
 static int radixTreeIsNodeRedundant(RadixTreeNode node) {
@@ -217,8 +218,8 @@ static int radixTreeSplitNode(RadixTreeNode node, const char *splitPtr) {
         } else {
             char *textB = malloc((textLeftLength + (size_t) 1) * sizeof(char));
             if (textB == NULL) {
-                radixTreeFreeNode(newNode);
                 free(textA);
+                radixTreeFreeNode(newNode);
                 return RADIX_TREE_OPERATION_FAIL;
             } else {
                 copyText(node->txt, textA, matchingTextLength);
@@ -312,6 +313,7 @@ void radixTreeDeleteSubTree(RadixTreeNode subTreeNode,
             }
             tmp = pos;
             pos = pos->father;
+            radixTreeChangeSon(pos, *tmp->txt, NULL);
             radixTreeFreeNode(tmp);
 
         } else {
@@ -371,10 +373,13 @@ static void radixTreeMerge(RadixTreeNode a, RadixTreeNode b) {
     } else {
         copyText(a->txt, txt, aTextLength);
         copyText(b->txt, txt + aTextLength, bTextLength);
+
+        free((void*)b->txt);
+
         b->txt = txt;
 
         b->father = a->father;
-        radixTreeChangeSon(a->father, *a->txt, b);
+        radixTreeChangeSon(a->father, *b->txt, b);
         radixTreeFreeNode(a);
     }
 
@@ -392,6 +397,7 @@ void radixTreeBalance(RadixTreeNode node) {
         if (radixTreeIsNodeRedundant(pos)) {
             tmp = pos;
             pos = pos->father;
+            radixTreeChangeSon(pos, *tmp->txt, NULL);
             radixTreeFreeNode(tmp);
         } else if (radixTreeCanBeMergedWithSon(node)) {
             tmp = pos;
