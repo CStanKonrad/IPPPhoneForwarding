@@ -736,8 +736,13 @@ static const struct PhoneNumbers *phfwdGetReverse(RadixTree backward, const char
             phnumDelete(result);
             return NULL;
         } else {
-            phfwdRadixSortOut(&result);
-            return result;
+            if (phfwdRadixSortOut(&result)) {
+                return result;
+            } else {
+                phnumDelete(result);
+                return NULL;
+            }
+
         }
     }
 
