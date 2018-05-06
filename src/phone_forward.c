@@ -164,8 +164,8 @@ void phfwdDelete(struct PhoneForward *pf) {
  *         w przeciwnym przypadku false.
  */
 static bool phfwdPrepareTreesForAdd(struct PhoneForward *pf,
-                                    char const *num1,
-                                    char const *num2,
+                                    const char *num1,
+                                    const char *num2,
                                     RadixTreeNode *fwInsert,
                                     RadixTreeNode *bwInsert) {
     RadixTree fw = pf->forward;
@@ -322,11 +322,11 @@ static bool phfwdAddSetNodes(RadixTreeNode fwInsert, RadixTreeNode bwInsert) {
  * @return Jeżeli odpowiedź jest pozytywna to true,
  *         w przeciwnym przypadku false.
  */
-static bool phfwdIsNumber(char const *num1) {
+static bool phfwdIsNumber(const char *num1) {
     if (num1 == NULL || *num1 == '\0') {
         return false;
     } else {
-        char const *ptr = num1;
+        const char *ptr = num1;
         while (*ptr != '\0') {
             if (!(*ptr <= '9' && *ptr >= '0')) {
                 return false;
@@ -337,7 +337,7 @@ static bool phfwdIsNumber(char const *num1) {
     }
 }
 
-bool phfwdAdd(struct PhoneForward *pf, char const *num1, char const *num2) {
+bool phfwdAdd(struct PhoneForward *pf, const char *num1, const char *num2) {
     if (!phfwdIsNumber(num1) || !phfwdIsNumber(num2)
         || strcmp(num1, num2) == 0) {
         return false;
@@ -367,7 +367,7 @@ static void phfwdRemoveCleaner(void *data, void *backwardTree) {
 
 }
 
-void phfwdRemove(struct PhoneForward *pf, char const *num) {
+void phfwdRemove(struct PhoneForward *pf, const char *num) {
     if (!phfwdIsNumber(num)) {
         return;
     } else {
@@ -401,10 +401,10 @@ void phfwdRemove(struct PhoneForward *pf, char const *num) {
  *        numeru w węźle drzewa.
  */
 static void phfwdSetPointersForGettingText(RadixTree tree,
-                                           char const *num,
+                                           const char *num,
                                            RadixTreeNode *ptr,
-                                           char const **matchedTxt,
-                                           char const **nodeMatched) {
+                                           const char **matchedTxt,
+                                           const char **nodeMatched) {
     int findResult = radixTreeFind(tree, num, ptr, matchedTxt, nodeMatched);
     if (findResult != RADIX_TREE_FOUND
         && (*(*nodeMatched) != '\0')) {
@@ -419,7 +419,7 @@ static void phfwdSetPointersForGettingText(RadixTree tree,
  * @param[in] num - wskaźnik na numer.
  * @return Przekierowany numer.
  */
-static char const *phfwdGetNumber(RadixTree forward, char const *num) {
+static const char *phfwdGetNumber(RadixTree forward, const char *num) {
     RadixTreeNode ptr;
     const char *matchedTxt;
     const char *nodeMatched;
@@ -455,7 +455,7 @@ static char const *phfwdGetNumber(RadixTree forward, char const *num) {
 
 }
 
-struct PhoneNumbers const *phfwdGet(struct PhoneForward *pf, char const *num) {
+const struct PhoneNumbers *phfwdGet(struct PhoneForward *pf, const char *num) {
     if (!phfwdIsNumber(num)) {
         return phfwdEmptySequenceResult();
     } else {
@@ -463,7 +463,7 @@ struct PhoneNumbers const *phfwdGet(struct PhoneForward *pf, char const *num) {
         if (result == NULL) {
             return NULL;
         } else {
-            char const *number = phfwdGetNumber(pf->forward, num);
+            const char *number = phfwdGetNumber(pf->forward, num);
             if (number == NULL) {
                 phnumDelete(result);
                 return NULL;
@@ -477,7 +477,7 @@ struct PhoneNumbers const *phfwdGet(struct PhoneForward *pf, char const *num) {
     return NULL;
 }
 
-void phnumDelete(struct PhoneNumbers const *pnum) {
+void phnumDelete(const struct PhoneNumbers *pnum) {
     if (pnum != NULL) {
         size_t i;
         for (i = 0; i < pnum->howMany; i++) {
@@ -490,7 +490,7 @@ void phnumDelete(struct PhoneNumbers const *pnum) {
     }
 }
 
-char const *phnumGet(struct PhoneNumbers const *pnum, size_t idx) {
+const char *phnumGet(const struct PhoneNumbers *pnum, size_t idx) {
     if (pnum == NULL
         || pnum->howMany <= idx) {
         return NULL;
@@ -532,7 +532,7 @@ static size_t phfwdHowManyRedirections(RadixTreeNode node) {
  */
 static bool phfwdAddRedir(struct PhoneNumbers *storage,
                           RadixTreeNode node,
-                          char const *matchedTxt) {
+                          const char *matchedTxt) {
     RadixTreeNode pos = node;
     size_t insertPtr = 0;
     while (!radixTreeIsRoot(pos)) {
@@ -584,7 +584,7 @@ static bool phfwdAddRedir(struct PhoneNumbers *storage,
  *         w przeciwnym przypadku.
  */
 static bool phfwdPrepareForSort(RadixTree *tree, size_t **ids,
-                                struct PhoneNumbers const *out) {
+                                const struct PhoneNumbers *out) {
     *tree = radixTreeCreate();
     if (*tree == NULL) {
         return false;
@@ -613,7 +613,7 @@ static bool phfwdPrepareForSort(RadixTree *tree, size_t **ids,
  *         w przeciwnym przypadku.
  */
 static bool phfwdRadixSortOutAddToTree(RadixTree tree, size_t *ids,
-                                       struct PhoneNumbers const *out) {
+                                       const struct PhoneNumbers *out) {
     size_t i;
     for (i = 0; i < out->howMany; i++) {
         RadixTreeNode ptr = radixTreeInsert(tree, out->numbers[i]);
@@ -720,7 +720,7 @@ static bool phfwdRadixSortOut(struct PhoneNumbers **out) {
  *        przekierowania.
  * @return Struktura z numerami dla phfwdReverse.
  */
-static struct PhoneNumbers const *phfwdGetReverse(RadixTree backward, char const *num) {
+static const struct PhoneNumbers *phfwdGetReverse(RadixTree backward, const char *num) {
     RadixTreeNode ptr;
     const char *matchedTxt;
     const char *nodeMatched;
@@ -744,7 +744,7 @@ static struct PhoneNumbers const *phfwdGetReverse(RadixTree backward, char const
 
 }
 
-struct PhoneNumbers const *phfwdReverse(struct PhoneForward *pf, char const *num) {
+const struct PhoneNumbers *phfwdReverse(struct PhoneForward *pf, const char *num) {
     if (!phfwdIsNumber(num)) {
         return phfwdEmptySequenceResult();
     } else {

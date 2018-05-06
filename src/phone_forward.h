@@ -28,7 +28,7 @@ struct PhoneNumbers;
  * @return Wskaźnik na utworzoną strukturę lub NULL, gdy nie udało się
  *         zaalokować pamięci.
  */
-struct PhoneForward * phfwdNew(void);
+struct PhoneForward *phfwdNew(void);
 
 /** @brief Usuwa strukturę.
  * Usuwa strukturę wskazywaną przez @p pf. Nic nie robi, jeśli wskaźnik ten ma
@@ -52,7 +52,7 @@ void phfwdDelete(struct PhoneForward *pf);
  *         reprezentuje numeru, oba podane numery są identyczne lub nie udało
  *         się zaalokować pamięci.
  */
-bool phfwdAdd(struct PhoneForward *pf, char const *num1, char const *num2);
+bool phfwdAdd(struct PhoneForward *pf, const char *num1, const char *num2);
 
 /** @brief Usuwa przekierowania.
  * Usuwa wszystkie przekierowania, w których parametr @p num jest prefiksem
@@ -62,7 +62,7 @@ bool phfwdAdd(struct PhoneForward *pf, char const *num1, char const *num2);
  * @param[in] pf  – wskaźnik na strukturę przechowującą przekierowania numerów;
  * @param[in] num – wskaźnik na napis reprezentujący prefiks numerów.
  */
-void phfwdRemove(struct PhoneForward *pf, char const *num);
+void phfwdRemove(struct PhoneForward *pf, const char *num);
 
 /** @brief Wyznacza przekierowanie numeru.
  * Wyznacza przekierowanie podanego numeru. Szuka najdłuższego pasującego
@@ -75,7 +75,7 @@ void phfwdRemove(struct PhoneForward *pf, char const *num);
  * @return Wskaźnik na strukturę przechowującą ciąg numerów lub NULL, gdy nie
  *         udało się zaalokować pamięci.
  */
-struct PhoneNumbers const * phfwdGet(struct PhoneForward *pf, char const *num);
+const struct PhoneNumbers *phfwdGet(struct PhoneForward *pf, const char *num);
 
 /** @brief Wyznacza przekierowania na dany numer.
  * Wyznacza wszystkie przekierowania na podany numer. Wynikowy ciąg zawiera też
@@ -88,14 +88,14 @@ struct PhoneNumbers const * phfwdGet(struct PhoneForward *pf, char const *num);
  * @return Wskaźnik na strukturę przechowującą ciąg numerów lub NULL, gdy nie
  *         udało się zaalokować pamięci.
  */
-struct PhoneNumbers const * phfwdReverse(struct PhoneForward *pf, char const *num);
+const struct PhoneNumbers *phfwdReverse(struct PhoneForward *pf, const char *num);
 
 /** @brief Usuwa strukturę.
  * Usuwa strukturę wskazywaną przez @p pnum. Nic nie robi, jeśli wskaźnik ten ma
  * wartość NULL.
  * @param[in] pnum – wskaźnik na usuwaną strukturę.
  */
-void phnumDelete(struct PhoneNumbers const *pnum);
+void phnumDelete(const struct PhoneNumbers *pnum);
 
 /** @brief Udostępnia numer.
  * Udostępnia wskaźnik na napis reprezentujący numer. Napisy są indeksowane
@@ -105,6 +105,6 @@ void phnumDelete(struct PhoneNumbers const *pnum);
  * @return Wskaźnik na napis. Wartość NULL, jeśli wskaźnik @p pnum ma wartość
  *         NULL lub indeks ma za dużą wartość.
  */
-char const * phnumGet(struct PhoneNumbers const *pnum, size_t idx);
+const char *phnumGet(const struct PhoneNumbers *pnum, size_t idx);
 
 #endif /* __PHONE_FORWARD_H__ */
