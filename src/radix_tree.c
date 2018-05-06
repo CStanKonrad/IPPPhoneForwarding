@@ -446,9 +446,11 @@ void radixTreeDelete(RadixTree tree, void (*f)(void *, void *), void *fData) {
     radixTreeDeleteSubTree(tree, f, fData);
 }
 
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wunused-parameter"
 void radixTreeEmptyDelFunction(void *ptrA, void *ptrB) {
-
 }
+#pragma GCC diagnostic pop
 
 void *radixTreeGetNodeData(RadixTreeNode node) {
     return node->data;
