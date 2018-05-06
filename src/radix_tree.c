@@ -6,13 +6,23 @@
  * @copyright Konrad Staniszewski
  * @date 04.05.2018
  */
+
 #include <stddef.h>
 #include <string.h>
 #include <stdlib.h>
 #include <assert.h>
 #include "radix_tree.h"
-#include "stdfunc.h"
+#include "text.h"
 
+/**
+ * @brief Kod operacji zakończonej sukcesem.
+ */
+#define RADIX_TREE_OPERATION_SUCCESS 1
+
+/**
+ * @brief Kod operacji zakończonej błędem.
+ */
+#define RADIX_TREE_OPERATION_FAIL 0
 
 int radixTreeIsRoot(RadixTreeNode node) {
     return node->txt != NULL && strcmp(node->txt, RADIX_TREE_ROOT_TXT) == 0;
@@ -37,6 +47,13 @@ static void radixTreeInitNode(RadixTreeNode node) {
 
 }
 
+/**
+ * @brief Zwalnia węzeł.
+ * #### Złożoność
+ * O(1)
+ * @remarks Zakłada, że do węzła nie są przypisane dane.
+ * @param[in] node - wskaźnik na węzeł drzewa.
+ */
 static void radixTreeFreeNode(RadixTreeNode node) {
     if (!radixTreeIsRoot(node)) {
         assert(node->data == NULL);
@@ -50,7 +67,7 @@ static void radixTreeFreeNode(RadixTreeNode node) {
 
 
 /**
- * @brief Inicjuje nowopowstałe drzewo.
+ * @brief Inicjuje nowo powstałe drzewo.
  * #### Złożoność
  * O(1)
  * @param[in] tree  - wskaźnik na drzewo.
@@ -79,13 +96,6 @@ static RadixTreeNode radixTreeCreateNode() {
 }
 
 
-/**
- * @brief Tworzy drzewo i inicjalizuje je.
- * #### Złożoność
- * O(1)
- * @return Wskaźnik na stworzone drzewo, w przypadku
- *         problemów z pamięcią NULL.
- */
 RadixTree radixTreeCreate() {
     RadixTree result = malloc(sizeof(struct RadixTreeNode));
     if (result == NULL) {
@@ -96,20 +106,31 @@ RadixTree radixTreeCreate() {
     }
 }
 
-static int radixTreeConvertCharToNumber(char sonId) {
-    return sonId - '0';
+/**
+ * @brief Konwertuje znak na numer syna.
+ * @param[in] sonCh - pierwsza litera na krawędzi do syna.
+ * @return Numer syna.
+ */
+static size_t radixTreeConvertCharToNumber(char sonCh) {
+    assert(sonCh <= '9' && sonCh >= '0');
+    return (size_t) sonCh - (size_t) '0';
 }
 
 /**
  * @brief Sprawdza czy węzeł @p node ma syna o numerze @p son.
- * @param node - wskaźnik na węzeł.
- * @param son - numer syna.
+ * @param[in] node - wskaźnik na węzeł.
+ * @param[in] son - pierwsza litera na krawędzi do syna.
  * @return Niezerowa wartość jeżeli ma, zerowa w przeciwnym wypadku.
  */
 static int radixTreeHasSon(RadixTreeNode node, char son) {
     return node->sons[radixTreeConvertCharToNumber(son)] != NULL;
 }
 
+/**
+ * @brief Liczba synów węzła @p node.
+ * @param[in] node - wskaźnik na węzeł.
+ * @return Liczba synów węzła @p node.
+ */
 static size_t radixTreeHowManySons(RadixTreeNode node) {
     size_t result = 0;
     size_t i;
@@ -121,33 +142,80 @@ static size_t radixTreeHowManySons(RadixTreeNode node) {
     return result;
 }
 
+/**
+ * @brief Czy węzeł @p node ma synów.
+ * @param[in] node - wskaźnik na węzeł.
+ * @return Niezerowa wartość jeżeli ma, zerowa w przeciwnym wypadku.
+ */
 static int radixTreeHasSons(RadixTreeNode node) {
     return radixTreeHowManySons(node) != 0;
 }
 
+/**
+ * @brief Czy @p node może zostać usunięty.
+ * @param[in] node - wskaźnik na węzeł.
+ * @return Niezrowa wartość jeżeli może, zerowa w przeciwnym wypadku.
+ */
 static int radixTreeIsNodeRedundant(RadixTreeNode node) {
-    return  (!radixTreeIsRoot(node)) &&
-            (!radixTreeHasSons(node)) &&
-            node->data == NULL;
+    return (!radixTreeIsRoot(node)) &&
+           (!radixTreeHasSons(node)) &&
+           node->data == NULL;
 }
 
+/**
+ * @brief Czy @p node może zostać scalony z synem.
+ * @param[in] node - wskaźnik na węzeł.
+ * @return Niezerowa wartość jeżeli może, zerowa w przeciwnym wypadku.
+ */
 static int radixTreeCanBeMergedWithSon(RadixTreeNode node) {
-    return  (!radixTreeIsRoot(node)) &&
-            radixTreeHowManySons(node) == 1 &&
-            node->data == NULL;
+    return (!radixTreeIsRoot(node)) &&
+           radixTreeHowManySons(node) == 1 &&
+           node->data == NULL;
 }
 
+/**
+ * @brief Przesuwa do @p son.
+ * Sprawia że wskaźnik @p *ptr wskazuje na syna węzła @p *ptr do którego
+ * prowadzi krawędź z pierwszą literą @p son.
+ * @param[in,out] ptr - wskaźnik na wskaźnik na węzeł.
+ * @param[in] son - znak odpowiadający synowi.
+ */
 static void radixTreeMoveToSon(RadixTreeNode *ptr, char son) {
     assert(radixTreeHasSon(*ptr, son));
     *ptr = (*ptr)->sons[radixTreeConvertCharToNumber(son)];
 }
 
+/**
+ * @brief Ustawia syna.
+ * Ustawia wierzchołkowi @p node syna (pod krawędzią zaczynającą się literą
+ * @p son) na @p ch.
+ * @param[in] node - wskaźnik na węzeł.
+ * @param[in] son - litera odpowiadająca synowi.
+ * @param[in] ch - wskaźnik na przyszłego syna @p node.
+ */
 static void radixTreeChangeSon(RadixTreeNode node, char son, RadixTreeNode ch) {
     if (node != NULL) {
         node->sons[radixTreeConvertCharToNumber(son)] = ch;
     }
 }
 
+/**
+ * @brief Przesuwa dopasowanie w ramach węzła.
+ * @param[in] node - wskaźnik na węzeł drzewa.
+ * @param[in,out] txt - wskaźnik na wskaźnik na dopasowanie.
+ *        @p *txt
+ *        po próbie dopasowania wskazuje
+ *        na element za ostatnim pasującym, w przypadku pełnego
+ *        dopasowania na '\0'.
+ * @param[out] nodeTxtPtr - wskaźnik na wskaźnik na dopasowanie
+ *        w ramach węzła @p node (krawędzi do niego wchodzącej).
+ *        @p *nodeTxtPtr
+ *        po próbie dopasowania wskazuje
+ *        na element za ostatnim pasującym, w przypadku pełnego
+ *        dopasowania na '\0'.
+ * @return RADIX_TREE_OPERATION_SUCCESS w przypadku pełnego dopasowania,
+ *         RADIX_TREE_OPERATION_FAIL w przeciwnym przypadku.
+ */
 static int radixTreeMoveTxt(RadixTreeNode node, const char **txt,
                             const char **nodeTxtPtr) {
     const char *i = node->txt;
@@ -171,6 +239,20 @@ static int radixTreeMoveTxt(RadixTreeNode node, const char **txt,
     }
 }
 
+/**
+ * @brief Próbuje dopsaować kolejny węzeł (krawędź do niego wchodzącą).
+ * @param[in,out] node - wskaźnik na wskaźnik na wierzchołek.
+ *        Po udanym przesunięciu @p *node wskazuje na następny wierzchołek, ew
+ *        na węzeł do którego krawędź udało się częściowo dopasować.
+ * @param[in,out] txt - wskaźnik na dopasowywany tekst.
+ *        Po próbie @p *txt dopasowania wskazuje
+ *        na element za ostatnim pasującym, w przypadku pełnego
+ *        dopasowania na '\0'.
+ * @param[out] nodeTxtPtr - podobnie do @p txt tylko dotyczy dopasowania
+ *        w ramach węzła.
+ * @return RADIX_TREE_OPERATION_FAIL w przypadku niemożności dalszego
+ *         dopasowania, RADIX_TREE_OPERATION_SUCCESS w przeciwnym przypadku.
+ */
 static int radixTreeMove(RadixTreeNode *node, const char **txt,
                          const char **nodeTxtPtr) {
     assert(*(*txt) != '\0');
@@ -210,6 +292,16 @@ size_t radixTreeHowManyChars(RadixTreeNode node) {
     return strlen(node->txt);
 }
 
+/**
+ * @brief Rozdziela węzeł na dwa.
+ * Rozdziela węzeł @p node na dwa tnąc krawędź do niego wchodzącą w punkcie
+ * @p splitPtr.
+ * @param[in] node - wskaźnik na węzeł.
+ * @param[in] splitPtr - wskaźnik na miejsce rozcinające w tekście krawędzi
+ *        (przechowywane w węźle).
+ * @return RADIX_TREE_OPERATION_SUCCESS w przypadku udanego rozcięcia,
+ *         RADIX_TREE_OPERATION_FAIL w przeciwnym przypadku.
+ */
 static int radixTreeSplitNode(RadixTreeNode node, const char *splitPtr) {
     RadixTreeNode newNode = radixTreeCreateNode();
 
@@ -251,6 +343,13 @@ static int radixTreeSplitNode(RadixTreeNode node, const char *splitPtr) {
     }
 }
 
+/**
+ * @brief Dodaje węzłowi @p node pustego syna.
+ * @param[in] node - wskaźnik na węzeł.
+ * @param[in] txt - wskaźnik na tekst krawędzi do syna.
+ * @return Wskaźnik na dodany węzeł, w przypadku problemów z
+ *         przydzieleniem pamięci NULL.
+ */
 static RadixTreeNode radixTreeInsertLeaf(RadixTreeNode node, const char *txt) {
     size_t textLength = strlen(txt);
     char *copiedText = malloc((textLength + (size_t) 1) * sizeof(char));
@@ -359,7 +458,12 @@ RadixTreeNode radixTreeFather(RadixTreeNode node) {
     return node->father;
 }
 
-static RadixTreeNode radixTreeFristSon(RadixTreeNode node) {
+/**
+ * @brief Zwraca wskaźnik na pierwszego syna węzła @p node.
+ * @param[in] node - wskaźnik na węzeł.
+ * @return Wskaźnik na pierwszego syna węzła @p node.
+ */
+static RadixTreeNode radixTreeFirstSon(RadixTreeNode node) {
     size_t i;
     for (i = 0; i < RADIX_TREE_NUMBER_OF_SONS; i++) {
         if (node->sons[i] != NULL) {
@@ -369,12 +473,22 @@ static RadixTreeNode radixTreeFristSon(RadixTreeNode node) {
     return NULL;
 }
 
+/**
+ * @brief Próbuje scalić węzeł @p a z węzłem @p b.
+ * @remarks Zakłada że węzeł @p a spełnia
+ *          predykat radixTreeCanBeMergedWithSon
+ * @see radixTreeCanBeMergedWithSon
+ * @remarks Adres węzła ba nie ulega zmianie.
+ * @param[in] a - wskaźnik na węzeł (zostanie usunięty po scaleniu).
+ * @param[in] b - wskaźnik na węzeł (zostanie tym scalonym).
+ * @return
+ */
 static int radixTreeMerge(RadixTreeNode a, RadixTreeNode b) {
 
     size_t aTextLength = strlen(a->txt);
     size_t bTextLength = strlen(b->txt);
-    size_t textLength =  aTextLength + bTextLength;
-    char *txt = malloc(textLength + (size_t)1);
+    size_t textLength = aTextLength + bTextLength;
+    char *txt = malloc(textLength + (size_t) 1);
 
     if (txt == NULL) {
         return RADIX_TREE_OPERATION_FAIL;
@@ -382,7 +496,7 @@ static int radixTreeMerge(RadixTreeNode a, RadixTreeNode b) {
         copyText(a->txt, txt, aTextLength);
         copyText(b->txt, txt + aTextLength, bTextLength);
 
-        free((void*)b->txt);
+        free((void *) b->txt);
 
         b->txt = txt;
 
@@ -394,7 +508,6 @@ static int radixTreeMerge(RadixTreeNode a, RadixTreeNode b) {
     }
 
 
-
 }
 
 void radixTreeBalance(RadixTreeNode node) {
@@ -403,7 +516,7 @@ void radixTreeBalance(RadixTreeNode node) {
     const size_t canSkip = 5;
 
     while (!radixTreeIsRoot(pos)
-            && skipped <= canSkip) {
+           && skipped <= canSkip) {
         if (radixTreeIsNodeRedundant(pos)) {
             tmp = pos;
             pos = pos->father;
@@ -412,7 +525,7 @@ void radixTreeBalance(RadixTreeNode node) {
         } else if (radixTreeCanBeMergedWithSon(pos)) {
             tmp = pos;
             pos = pos->father;
-            int mergeResult =radixTreeMerge(tmp, radixTreeFristSon(tmp));
+            int mergeResult = radixTreeMerge(tmp, radixTreeFirstSon(tmp));
             if (mergeResult != RADIX_TREE_OPERATION_SUCCESS) {
                 skipped++;
             }
@@ -490,10 +603,8 @@ void radixTreeFold(RadixTree tree, void (*f)(void *, void *), void *fData) {
     }
 }
 
-void radixTreeEmptyCountDataFunction(void *ptrA, void *ptrB) {
+void radixTreeCountDataFunction(void *ptrA, void *ptrB) {
     size_t *counter = (size_t *) ptrB;
     assert(ptrA != NULL);
     (*counter)++;
 }
-
-

@@ -1,24 +1,65 @@
+/** @file
+ * Implementacja klasy przechowującej przekierowania numerów telefonicznych
+ *
+ * @author Konrad Staniszewski
+ * @copyright Konrad Staniszewski
+ * @date 06.05.2018
+ */
 
 #include <assert.h>
 #include <string.h>
 #include <stdint.h>
-#include <stdio.h>
 #include "phone_forward.h"
 #include "radix_tree.h"
 #include "list.h"
-#include "stdfunc.h"
+#include "text.h"
 
-
+/**
+ * @brief Struktura przechowująca przekierowania numerów telefonów.
+ */
 struct PhoneForward {
+    /**
+     * @brief Drzewo reprezentujące przekierowania.
+     * Jego węzły przechowują informacje
+     * o tym na jaki tekst zostały przekierowane ForwardData->treeNode
+     * oraz o węźle na liście przechowującej informacje pozwalającą odwrócić
+     * przekierowanie ForwardData->listNode.
+     * Sam węzeł reprezentuje numer.
+     * @see ForwardData
+     */
     RadixTree forward;
+
+    /**
+     * @brief Drzewo reprezentujące odwrócone przekierowania.
+     * Pozwala na odtworzenie numerów przekierowywanych na dany numer.
+     * JEgo węzły przechowują listy wskaźników na węzły
+     * drzewa forward przekierowywane na
+     * dany węzeł.
+     * Sam węzeł reprezentuje numer.
+     */
     RadixTree backward;
 };
 
+/**
+ * @brief Struktura przechowująca ciąg numerów telefonów.
+ */
 struct PhoneNumbers {
+    /**
+     * @brief Tablica wskaźników na numery.
+     */
     char **numbers;
+
+    /**
+     * @brief Liczba numerów.
+     */
     size_t howMany;
 };
 
+/**
+ * @brief Tworzy strukturę do przechowywania numerów.
+ * @param[in] howMany - ilość przechowywanych numeróœ.
+ * @return Wskaźnik na strukturę do przechowywania @p howMany numerów.
+ */
 static struct PhoneNumbers *phfwdCreatePhoneNumbersStructure(size_t howMany) {
     struct PhoneNumbers *result = malloc(sizeof(struct PhoneNumbers));
     if (result == NULL) {
@@ -39,6 +80,11 @@ static struct PhoneNumbers *phfwdCreatePhoneNumbersStructure(size_t howMany) {
     }
 }
 
+/**
+ * @brief Tworzy strukturę przechowującą zero numerów.
+ * @see phfwdCreatePhoneNumbersStructure.
+ * @return Wskaźnik na strukturę przechowującą zero numerów.
+ */
 static struct PhoneNumbers *phfwdEmptySequenceResult() {
     struct PhoneNumbers *result = phfwdCreatePhoneNumbersStructure(0);
     return result;
@@ -67,12 +113,26 @@ struct PhoneForward *phfwdNew(void) {
     }
 }
 
+/**
+ * @brief Do usuwania drzewa PhoneForward->forward.
+ * @see PhoneForward
+ * @see radixTreeDelete
+ * @param[in] ptrA - wskaźnik na dane do usunięcia.
+ * @param ptrB - nieużywany wskaźnik (powinien wskazywać na NULL.
+ */
 static void phfwdForwardJustDelete(void *ptrA, void *ptrB) {
     assert(ptrA != NULL);
     assert(ptrB == NULL);
     free(ptrA);
 }
 
+/**
+ * @brief Do usuwania drzewa PhoneForward->backward.
+ * @see PhoneForward
+ * @see radixTreeDelete
+ * @param[in] ptrA - wskaźnik na dane (listę) do usunięcia.
+ * @param ptrB - nieużywany wskaźnik (powinien wskazywać na NULL.
+ */
 static void phfwdBackwardJustDelete(void *ptrA, void *ptrB) {
     assert(ptrA != NULL);
     assert(ptrB == NULL);
@@ -89,7 +149,20 @@ void phfwdDelete(struct PhoneForward *pf) {
     }
 }
 
-
+/**
+ * @brief Przygotowuje drzewa struktury @p pf do dodania danych.
+ * Dodaje do drzew struktury @p pf wierzchołki reprezentujące napisy
+ * @p num1 i @p num2.
+ * @param[in] pf - wskaźnik na strukturę przechowującą przekierowania.
+ * @param[in] num1 - prefiks do przekierowania.
+ * @param[in] num2 - prefiks na który zostanie przekierowany @p num1.
+ * @param[out] fwInsert - @p *fwInsert po udanym przygotowaniu będzie wskazywać
+ *        na węzeł w drzewie @p pf->forward reprezentujący @p num1.
+ * @param[out] bwInsert - @p *bwInsert po udanym przygotowaniu będzie wskazywać
+ *        na węzeł w drzewie @p pf->backward reprezentujący @p num2.
+ * @return W przypadku udanego przygotowania true,
+ *         w przeciwnym przypadku false.
+ */
 static bool phfwdPrepareTreesForAdd(struct PhoneForward *pf,
                                     char const *num1,
                                     char const *num2,
@@ -114,6 +187,14 @@ static bool phfwdPrepareTreesForAdd(struct PhoneForward *pf,
     }
 }
 
+/**
+ * @brief Uzupełnia dane w węźle bw.
+ * @param[in] bw - wskaźnik na węzeł
+ * @param[in] redirection - wskaźnik na węzeł reprezentujący
+ *        prefiks przekierowywany na @p bw
+ * @return Wskaźnik na uzupełnione dane, w przypadku problemów
+ *         z przydzieleniem pamięci NULL.
+ */
 static ListNode phfwdPrepareBw(RadixTreeNode bw, RadixTreeNode redirection) {
     List list = radixTreeGetNodeData(bw);
     if (list == NULL) {
@@ -135,18 +216,48 @@ static ListNode phfwdPrepareBw(RadixTreeNode bw, RadixTreeNode redirection) {
     }
 }
 
+/**
+ * @brief wskaźnik na struct ForwardData.
+ * @see struct ForwardData
+ */
 typedef struct ForwardData *ForwardData;
+
+/**
+ * @brief Dane przechowywane w węzłach PhoneForward->forward.
+ * @see PhoneForward
+ */
 struct ForwardData {
+    /**
+     * @brief Węzeł reprezentujący tekst na który jest przekierowywany prefiks.
+     */
     RadixTreeNode treeNode;
+
+    /**
+     * Wskaźnik na element listy w węźle treeNode z drzewa
+     * PhoneForward->backward reprezentujący wskaźnik na dany węzeł.
+     * @see treeNode
+     * @see PhoneForward
+     */
     ListNode listNode;
 };
 
+/**
+ * @brief Do balansowania drzewa w przypadku nieudanego wstawienia.
+ * @param[in] fwInsert - wskaźnik na
+ * @param[in] bwInsert
+ */
 static void phfwdPrepareClean(RadixTreeNode fwInsert, RadixTreeNode bwInsert) {
 
     radixTreeBalance(bwInsert);
     radixTreeBalance(fwInsert);
 }
 
+/**
+ * @brief Usuwa odwrócone przekierowanie.
+ * Usuwa informacje o przekierowaniu z drzewa PhoneForward->backward.
+ * @see ForwardData
+ * @param[in] fd - informacje o przekierowaniu.
+ */
 static void phfwdDeleteNodeFromBackwardTree(ForwardData fd) {
     assert(fd != NULL);
     assert(fd->treeNode != NULL);
@@ -161,7 +272,15 @@ static void phfwdDeleteNodeFromBackwardTree(ForwardData fd) {
     }
 }
 
-static bool phfwdPrepareNodes(RadixTreeNode fwInsert, RadixTreeNode bwInsert) {
+/**
+ * @brief Wstawia dane o przekierowaniach do węzłów.
+ * @param[in] fwInsert - wskaźnik na węzeł do wstawienia danych w drzewie
+ *        PhoneForward->forward.
+ * @param[in] bwInsert wskaźnik na węzeł do wstawienia danych w drzewie
+ *        PhoneForward->backward.
+ * @return W przypadku sukcesu zwraca true, w przeciwnym przypadku false.
+ */
+static bool phfwdAddSetNodes(RadixTreeNode fwInsert, RadixTreeNode bwInsert) {
     ListNode newNode = phfwdPrepareBw(bwInsert, fwInsert);
     if (newNode == NULL) {
         phfwdPrepareClean(fwInsert, bwInsert);
@@ -197,6 +316,12 @@ static bool phfwdPrepareNodes(RadixTreeNode fwInsert, RadixTreeNode bwInsert) {
 
 }
 
+/**
+ * @brief Sprawdza czy @p num1 to poprawny numer.
+ * @param[in] num1 - wskaźnik na numer.
+ * @return Jeżeli odpowiedź jest pozytywna to true,
+ *         w przeciwnym przypadku false.
+ */
 static bool phfwdIsNumber(char const *num1) {
     if (num1 == NULL || *num1 == '\0') {
         return false;
@@ -214,18 +339,25 @@ static bool phfwdIsNumber(char const *num1) {
 
 bool phfwdAdd(struct PhoneForward *pf, char const *num1, char const *num2) {
     if (!phfwdIsNumber(num1) || !phfwdIsNumber(num2)
-            || strcmp(num1, num2) == 0) {
+        || strcmp(num1, num2) == 0) {
         return false;
     } else {
         RadixTree fwInsert;
         RadixTree bwInsert;
         return phfwdPrepareTreesForAdd(pf, num1, num2, &fwInsert, &bwInsert) &&
-               phfwdPrepareNodes(fwInsert, bwInsert);
+               phfwdAddSetNodes(fwInsert, bwInsert);
     }
 
 }
 
-
+/**
+ * @brief Usuwa odpowiedniki danych z PhoneForward->forward w backward.
+ * Używany w radixTreeDeleteSubTree.
+ * @see radixTreeDeleteSubTree
+ * @see phfwdRemove
+ * @param[in] data - wskaźnik na dane z węzła drzewa PhoneForward->forward.
+ * @param[in] backwardTree - wskaźnik na drzewo PhoneForward->backward.
+ */
 static void phfwdRemoveCleaner(void *data, void *backwardTree) {
     assert(data != NULL);
     assert(backwardTree != NULL);
@@ -251,6 +383,23 @@ void phfwdRemove(struct PhoneForward *pf, char const *num) {
     }
 }
 
+/**
+ * @brief Poprawia wskaźniki dla phfwdGetNumber.
+ * @see phfwdGetNumber
+ * @param[in] tree - wskaźnik na drzewo numerów.
+ * @param[in] num - wskaźnik na tekst reprezentujący numer.
+ * @param[in, out] ptr - wskaźnik na wskaźnik na węzeł którego ojciec reprezentuje
+ *        najdłuższy możliwy pasujący prefiks numeru
+ *        a krawędź wchodząca do @p ptr pewną jego część
+ *        następującą po prefiksie. Po wykonaniu operacji @p *ptr wskazuje
+ *        na węzeł reprezentujący najdłuższy pasujący prefiks numeru.
+ * @param[in,out] matchedTxt - wskaźnik na wskaźnik na tekst
+ *        reprezentujący dopasowanie
+ *        numeru w drzewie. Po wykonaniu operacji wskazuje na dopasowanie
+ *        wyłączające częściowe dopasowanie krawędzi w @p tree.
+ * @param[in] nodeMatched - wskaźnik na tekst reprezentujący dopasowanie
+ *        numeru w węźle drzewa.
+ */
 static void phfwdSetPointersForGettingText(RadixTree tree,
                                            char const *num,
                                            RadixTreeNode *ptr,
@@ -264,16 +413,17 @@ static void phfwdSetPointersForGettingText(RadixTree tree,
     }
 }
 
+/**
+ * @brief Pobiera przekierowany numer.
+ * @param[in] forward - wskaźnik na węzeł reprezentujący drzewo.
+ * @param[in] num - wskaźnik na numer.
+ * @return Przekierowany numer.
+ */
 static char const *phfwdGetNumber(RadixTree forward, char const *num) {
     RadixTreeNode ptr;
     const char *matchedTxt;
     const char *nodeMatched;
-    /*int findResult = radixTreeFind(forward, num, &ptr, &matchedTxt, &nodeMatched);
-    if (findResult != RADIX_TREE_FOUND
-        && (*nodeMatched != '\0')) {
-        matchedTxt = matchedTxt - radixTreeHowManyCharsOffset(ptr, nodeMatched);
-        ptr = radixTreeFather(ptr);
-    }*/
+
     phfwdSetPointersForGettingText(forward, num, &ptr, &matchedTxt, &nodeMatched);
 
     while (!radixTreeIsRoot(ptr) && radixTreeGetNodeData(ptr) == NULL) {
@@ -300,17 +450,6 @@ static char const *phfwdGetNumber(RadixTree forward, char const *num) {
             result = concatenate(prefix, matchedTxt);
             free(prefix);
             return result;
-            /*result = malloc(strlen(prefix) + strlen(matchedTxt) + (size_t) 1);
-            if (result == NULL) {
-                free(prefix);
-                return NULL;
-            } else {
-                strcpy(result, prefix);
-                strcpy(result + strlen(prefix), matchedTxt);
-                free(prefix);
-                return result;
-            }*/
-
         }
     }
 
@@ -360,6 +499,12 @@ char const *phnumGet(struct PhoneNumbers const *pnum, size_t idx) {
     }
 }
 
+/**
+ * @brief Maksymalna liczba numerów zwróconych w wyniku phfwdGetReverse.
+ * @param[in] node - wskaźnik na węzeł
+ * @return Maksymalna liczba numerów zwróconych w wyniku phfwdGetReverse od
+ *         tekstu reprezentowanego przez węzeł @p node.
+ */
 static size_t phfwdHowManyRedirections(RadixTreeNode node) {
     size_t result = 1;
     RadixTreeNode pos = node;
@@ -374,6 +519,17 @@ static size_t phfwdHowManyRedirections(RadixTreeNode node) {
     return result;
 }
 
+/**
+ * @brief Dodaje numery które powstają w wyniku phfwdReverse do @p storage.
+ * @param[out] storage - wskaźnik na strukturę przechowującą numery, gotową
+ *        do przyjęcia numerów (razem z powtórzeniami).
+ * @param[in] node - wskaźnik na węzeł reprezentujący najdłuższy prefiks numeru,
+ *        z wyłączeniem częściowego dopasowania krawędzi.
+ * @param[in] matchedTxt - wskaźnik na dopasowanie numeru (wszystkie znaki
+ *        występujące za tym wskaźnikiem nie zostały dopasowane.
+ * @return W przypadku udanego dodania true, w przypadku problemów
+ *         false.
+ */
 static bool phfwdAddRedir(struct PhoneNumbers *storage,
                           RadixTreeNode node,
                           char const *matchedTxt) {
@@ -393,6 +549,7 @@ static bool phfwdAddRedir(struct PhoneNumbers *storage,
                     if (toAdd == NULL) {
                         return false;
                     } else {
+                        assert(insertPtr < storage->howMany);
                         storage->numbers[insertPtr] = toAdd;
                         insertPtr++;
                     }
@@ -408,13 +565,24 @@ static bool phfwdAddRedir(struct PhoneNumbers *storage,
     if (toAdd == NULL) {
         return false;
     } else {
+        assert(insertPtr < storage->howMany);
         storage->numbers[insertPtr] = toAdd;
         insertPtr++;
     }
     return true;
 }
 
-
+/**
+ * @brief Przygotowuje podane struktury do sortowania numerów
+ * @param[out] tree - wskaźnik na wskaźnik na drzewo wykorzystane do sortowania.
+ *        Po wykonaniu @p *tree wskazuje na nowe puste drzewo.
+ * @param[out] ids - wskaźnik na wskaźnik na tablicę indeksów.
+ *        Po wykonaniu @p *ids wskazuje na tablicę indeksów od 0 do
+ *        @p out->howMany - 1.
+ * @param[in] out - wskaźnik na strukturę przechowującą numery.
+ * @return Jeżeli operacja się powiedzie to true, false
+ *         w przeciwnym przypadku.
+ */
 static bool phfwdPrepareForSort(RadixTree *tree, size_t **ids,
                                 struct PhoneNumbers const *out) {
     *tree = radixTreeCreate();
@@ -435,6 +603,15 @@ static bool phfwdPrepareForSort(RadixTree *tree, size_t **ids,
     }
 }
 
+/**
+ * @brief Dodaje numery do drzewa w celu posortowania.
+ * Dodaje numery do drzewa w celu posortowania numerów i usunięcia powtórzeń.
+ * @param[in] tree - wskaźnik na drzewo wykorzystywane przy sortowaniu.
+ * @param[in] ids - tablica indeksów (od 0 do @p out->howMany - 1).
+ * @param[in] out - wskaźnik na strukturę z numerami.
+ * @return Jeżeli operacja się powiedzie to true, false
+ *         w przeciwnym przypadku.
+ */
 static bool phfwdRadixSortOutAddToTree(RadixTree tree, size_t *ids,
                                        struct PhoneNumbers const *out) {
     size_t i;
@@ -449,28 +626,60 @@ static bool phfwdRadixSortOutAddToTree(RadixTree tree, size_t *ids,
     return true;
 }
 
+/**
+ * @brief Dane dla funkcji sortującej.
+ * @see phfwdRadixSortOutOrganize.
+ */
 struct SortFoldData {
+    /**
+     * @brief Wskaźnik na strukturę z wynikiem.
+     */
     struct PhoneNumbers *newOut;
+
+    /**
+     * @brief Wskaźnik na strukturę z nieposortowanymi numerami.
+     */
     const struct PhoneNumbers *oldOut;
+
+    /**
+     * @brief Liczba numerów już dodanych do newOut.
+     * @see newOut
+     */
     size_t process;
 
 };
 
+/**
+ * @brief Pobiera z drzewa numery w kolejności posortowanej.
+ * @see SortFoldData
+ * @see radixTreeFold
+ * @param[in] data - wskaźnik na indeks (przechowywany przez drzewo).
+ * @param[in] fData - wskaźnik na SortFoldData.
+ * @see SortFoldData
+ */
 static void phfwdRadixSortOutOrganize(void *data, void *fData) {
-    struct SortFoldData *sfd = (struct SortFoldData *)fData;
-    size_t *id = (size_t *)data;
+    struct SortFoldData *sfd = (struct SortFoldData *) fData;
+    size_t *id = (size_t *) data;
     sfd->newOut->numbers[sfd->process] = sfd->oldOut->numbers[*id];
     sfd->process++;
     sfd->oldOut->numbers[*id] = NULL;
 }
 
+/**
+ * @brief Sortuje numery.
+ * Sortuje numery z @p *out i usuwa powtórzenia.
+ * @param[in, out] out - wskaźnik na wskaźnik na strukturę z numerami.
+ *        po wykonaniu @p *out wskazuje na strukturę z posortowanymi numerami
+ *        (bez powtórzeń) stara struktura zostaje usunięta.
+ * @return W przypadku sukcesu true, w przypadku problemów false.
+ */
 static bool phfwdRadixSortOut(struct PhoneNumbers **out) {
     RadixTree tree;
     size_t *ids;
     if (phfwdPrepareForSort(&tree, &ids, *out)) {
         if (phfwdRadixSortOutAddToTree(tree, ids, *out)) {
             size_t howManyUnique = 0;
-            radixTreeFold(tree, radixTreeEmptyCountDataFunction, &howManyUnique);
+            radixTreeFold(tree, radixTreeCountDataFunction, &howManyUnique);
             struct PhoneNumbers *newOut = phfwdCreatePhoneNumbersStructure(howManyUnique);
 
             if (newOut == NULL) {
@@ -502,6 +711,15 @@ static bool phfwdRadixSortOut(struct PhoneNumbers **out) {
     }
 }
 
+/**
+ * @brief Pobiera numery dla phfwdReverse.
+ * @see phfwdReverse
+ * @param backward - wskaźnik na drzewo z informacjami o
+ *          odwróconych przekierowaniach.
+ * @param num - wskaźnik na numer dla którego wykonujemy operację odwrócenia
+ *        przekierowania.
+ * @return Struktura z numerami dla phfwdReverse.
+ */
 static struct PhoneNumbers const *phfwdGetReverse(RadixTree backward, char const *num) {
     RadixTreeNode ptr;
     const char *matchedTxt;
@@ -509,13 +727,12 @@ static struct PhoneNumbers const *phfwdGetReverse(RadixTree backward, char const
     phfwdSetPointersForGettingText(backward, num, &ptr, &matchedTxt, &nodeMatched);
 
     size_t numberOfRedirections = phfwdHowManyRedirections(ptr);
-    //printf("eeee:%d\n", numberOfRedirections);
 
     struct PhoneNumbers *result = phfwdCreatePhoneNumbersStructure(numberOfRedirections);
     if (result == NULL) {
         return NULL;
     } else {
-        if(!phfwdAddRedir(result, ptr, matchedTxt)) {
+        if (!phfwdAddRedir(result, ptr, matchedTxt)) {
             phnumDelete(result);
             return NULL;
         } else {
@@ -527,9 +744,6 @@ static struct PhoneNumbers const *phfwdGetReverse(RadixTree backward, char const
 
 }
 
-
-
-
 struct PhoneNumbers const *phfwdReverse(struct PhoneForward *pf, char const *num) {
     if (!phfwdIsNumber(num)) {
         return phfwdEmptySequenceResult();
@@ -537,4 +751,3 @@ struct PhoneNumbers const *phfwdReverse(struct PhoneForward *pf, char const *num
         return phfwdGetReverse(pf->backward, num);
     }
 }
-

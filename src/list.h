@@ -157,7 +157,7 @@ void listPopFront(List list);
 /**
  * @brief Usuwa ostatni węzeł z listy.
  * Usuwa ostatni węzeł z @p list.
- * Zakłada neipustość @p list.
+ * Zakłada niepustość @p list.
  * #### Złożoność
  * O(1)
  * @param[in] list  - wskaźnik na listę.
@@ -230,7 +230,7 @@ ListNode listLastNode(List list);
  * #### Złożoność
  * O(1)
  * @param[in] node  - wskaźnik na węzeł.
- * @return Wskaźnik do następnego w kolejnośći węzła listy @p list.
+ * @return Wskaźnik do następnego w kolejności węzła listy @p list.
  *         W przypadku braku następnego NULL.
  */
 ListNode listNextNode(ListNode node);
@@ -240,7 +240,7 @@ ListNode listNextNode(ListNode node);
  * #### Złożoność
  * O(1)
  * @param[in] node  - wskaźnik na węzeł.
- * @return Wskaźnik do poprzedniego w kolejnośći węzła listy @p list.
+ * @return Wskaźnik do poprzedniego w kolejności węzła listy @p list.
  *         W przypadku braku poprzedniego NULL.
  */
 ListNode listPreviousNode(ListNode node);
@@ -256,7 +256,7 @@ LIST_ELEMENT_TYPE listNodeGetValue(ListNode node);
 
 /**
  * @brief Kopiuje ostatnie @p k elementów do tablicy.
- * Do tablicy @p output zapisje min(@p k, liczba_elementów_listy_list)
+ * Do tablicy @p output zapisuje min(@p k, liczba_elementów_listy_list)
  * ostatnich elementów listy @p list.
  * @param[in] list      - wskaźnik na listę.
  * @param[in] k         - liczba elementów do pobrania.
@@ -267,7 +267,7 @@ void listLastKElementsToArray(List list, size_t k,
 
 /**
  * @brief Kopiuje pierwsze @p k elementów do tablicy.
- * Do tablicy @p output zapisje min(@p k, liczba_elementów_listy_list)
+ * Do tablicy @p output zapisuje min(@p k, liczba_elementów_listy_list)
  * pierwszych elementów listy @p list.
  * @param[in] list      - wskaźnik na listę.
  * @param[in] k         - liczba elementów do pobrania.
@@ -280,7 +280,7 @@ void listFirstKElementsToArray(List list, size_t k,
  * @brief Sprawdza rozmiar.
  * Do sprawdzania rozmiaru listy @p list.
  * @param[in] list      - wskaźnik na listę.
- * @param[in] maxSize   - organiczenie.
+ * @param[in] maxSize   - ograniczenie.
  * @return W przypadku, gdy liczba elementów przechowywanych w @p list
  *         jest mniejsza niż @p maxSize to liczba tych elementów,
  *         w przeciwnym przypadku @p maxSize.

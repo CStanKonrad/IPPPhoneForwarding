@@ -37,6 +37,7 @@ static ListNode listAllocNode() {
     }
 
 }
+
 /**
  * @brief Inicjalizuje strukturę listy @p list.
  * @param[in] list  - wskaźnik na listę.
