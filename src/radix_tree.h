@@ -67,8 +67,8 @@ typedef struct RadixTreeNode *RadixTreeNode;
  */
 struct RadixTreeNode {
     /**
-     * @brief Tekst przechowywane przez węzeł.
-     * Tekst odpowiadający krawędzi wchodzącej do węzła.
+     * @brief Numer przechowywany przez węzeł.
+     * Numer odpowiadający krawędzi wchodzącej do węzła.
      * Korzeń przechowuje wartość RADIX_TREE_ROOT_TXT.
      * @see RADIX_TREE_ROOT_TXT
      */
@@ -80,7 +80,9 @@ struct RadixTreeNode {
     void *data;
 
     /**
-     * @brief Zmienna pomocnicza do przechodzenia drzewa bez użycia rekurencji.
+     * @brief Zmienna pomocnicza do przechodzenia drzewa bez użycia rekurencji,
+     * Zmienna wykorzystywana przez funkcje: @ref radixTreeFold,
+     * @ref radixTreeDeleteSubTree, @ref radixTreeDelete.
      */
     size_t foldI;
 
@@ -108,8 +110,8 @@ RadixTree radixTreeCreate();
 
 
 /**
- * @brief Sprawdza czy @p node jest korzeniem drzewa.
- * Sprzawdza czy @p node jest węzłem reprezentującym drzewo.
+ * @brief Sprawdza, czy @p node jest korzeniem drzewa.
+ * Sprzawdza, czy @p node jest węzłem reprezentującym drzewo.
  * @param[in] node - wskaźnik na węzeł drzewa.
  * @return Niezerowa wartość w przypadku gdy @p node jest korzeniem,
  *         zero w przeciwnym wypadku.
@@ -118,26 +120,31 @@ int radixTreeIsRoot(RadixTreeNode node);
 
 /**
  * @param[in] node - wskaźnik na węzeł.
- * @return Ilość znaków na krawędzi wchodzącej do @p node.
+ * @return Liczba znaków na krawędzi wchodzącej do @p node.
  */
 size_t radixTreeHowManyChars(RadixTreeNode node);
 
 /**
  * @brief Wyszukuje węzeł reprezentujący @p txt.
  * @param[in] tree - wskaźnik na drzewo.
- * @param[in] txt - wskaźnik na tekst.
- * @param[out] ptr - miejsce gdzie powinno powstać rozgałęzienie.
+ * @param[in] txt - wskaźnik na numer.
+ * @param[out] ptr - miejsce gdzie powinno powstać rozgałęzienie
+ *       (miejsce w którym należy zmodyfikować drzewo w przypadku
+ *       dodania @p txt).
  * @param[out] txtMatchPtr - ustawia na taką pozycję że cały tekst do
- *       *txtMatchPtr wyłącznie jest dopasowany w drzewie
- *       @p tree.
- * @param[out] nodeMatch - ilość znaków dopasowanych na krawędzi wchodzącej do
- *       @p *ptr.
+ *       *txtMatchPtr wyłącznie da się uzyskać przechodząc w dół (od ojca
+ *       do syna) po krawędziach w drzewie @p tree,
+ *       a próba dalszego dopasowania jest
+ *       niemożliwa.
+ * @param[out] nodeMatch - maksymalne dopsaowanie w ramach krawędzi. Zwraca
+ *       długość numeru @p txt który został dopasowany do numeru na krawędzi
+ *       wchodzącej do @p *ptr.
  * @param[out] nodeMatchMode - jeżeli w pełni dopasowano krawędź wchodzącą do
  *       @p *ptr to ustawiany jest na RADIX_TREE_NODE_MATCH_FULL,
  *       w przeciwnym przypadku na RADIX_TREE_NODE_MATCH_PARTIAL.
  * @return W przypadku gdy węzeł reprezentujący @p txt istnieje w drzewie
  *         RADIX_TREE_FOUND, w przypadku gdy @p txt jest podciągiem
- *         tekstu reprezentowanego przez któryś z węzłów RADIX_TREE_SUBSTR,
+ *         numeru reprezentowanego przez któryś z węzłów RADIX_TREE_SUBSTR,
  *         w przeciwnym wypadku RADIX_TREE_NOT_FOUND.
  */
 int radixTreeFind(RadixTree tree, const char *txt, RadixTreeNode *ptr,
@@ -148,7 +155,9 @@ int radixTreeFind(RadixTree tree, const char *txt, RadixTreeNode *ptr,
  * @brief Okrojona wersja radixTreeFind.
  * @see radixTreeFind
  * @param[in] tree - wskaźnik na drzewo.
- * @param[in] txt - wskaźnik na tekst.
+ * @param[in] txt - miejsce gdzie powinno powstać rozgałęzienie
+ *       (miejsce w którym należy zmodyfikować drzewo w przypadku
+ *       dodania @p txt).
  * @param[out] ptr - miejsce gdzie powinno powstać rozgałęzienie.
  * @return W przypadku gdy węzeł reprezentujący @p txt istnieje w drzewie
  *         RADIX_TREE_FOUND, w przypadku gdy @p txt jest podciągiem
@@ -158,12 +167,10 @@ int radixTreeFind(RadixTree tree, const char *txt, RadixTreeNode *ptr,
 int radixTreeFindLite(RadixTree tree, const char *txt, RadixTreeNode *ptr);
 
 /**
- * @brief Sprawia że w drzewie powstaje ścieżka reprezentująca tekst @p txt.
- * @remarks Nie balansuje drzewa
- * @see radixTreeBalance
+ * @brief Sprawia że w drzewie powstaje ścieżka reprezentująca numer @p txt.
  * @see radixGetFullText
  * @param[in] tree - wskaźnik na drzewo.
- * @param[in] txt - wskaźnik na tekst.
+ * @param[in] txt - wskaźnik na tekst reprezentujący numer.
  * @return Wskaźnik do węzła dla którego wywołanie
  *         radixGetFullText zwróci @p txt,
  *         w przypadku problemów z przydzieleniem pamięci NULL.
@@ -172,7 +179,7 @@ RadixTreeNode radixTreeInsert(RadixTree tree, const char *txt);
 
 /**
  * @brief Nie robi nic.
- * Do usuwanie drzewa bez usuwania danych przechowywanych przez węzły.
+ * Do usuwania drzewa bez usuwania danych przechowywanych przez węzły.
  * @see radixTreeDeleteSubTree
  * @see radixTreeDelete
  * @param ptrA - nieużywany wskaźnik.
@@ -232,7 +239,7 @@ void radixTreeSetData(RadixTreeNode node, void *ptr);
  * @brief Poprzednik na ścieżce do korzenia.
  * @param[in] node - wskaźnik na węzeł.
  * @return Wskaźnik do ojca węzła @p node (poprzednika na ścieżce do korzenia,
- *         NULL w przypadku braku.
+ *         NULL w przypadku braku takiego węzła.
  */
 RadixTreeNode radixTreeFather(RadixTreeNode node);
 
@@ -246,7 +253,7 @@ void radixTreeBalance(RadixTreeNode node);
 
 /**
  * @brief Tekst reprezentujący węzeł.
- * @remarks Musi zostać zwolniony przy pomocy free.
+ * @remarks Wynik musi zostać zwolniony przy pomocy free.
  * @param[in] node - wskaźnik na węzeł drzewa.
  * @return Wskaźnik na tekst reprezentujący ścieżkę od korzenia do węzła,
  *         w przypadku problemów z przydzieleniem pamięci zwraca NULL.

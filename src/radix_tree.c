@@ -84,7 +84,7 @@ static int radixTreeInitTree(RadixTree tree) {
 
 
 /**
- * @brief Tworzy węzeł drzewa i inicjalizuje go.
+ * @brief Tworzy węzeł drzewa i inicjuje go.
  * #### Złożoność
  * O(1)
  * @return Wskaźnik na stworzony węzeł, w przypadku
@@ -200,7 +200,7 @@ static void radixTreeMoveToSon(RadixTreeNode *ptr, char son) {
  * @p son na @p ch.
  * @param[in] node - wskaźnik na węzeł.
  * @param[in] son - litera odpowiadająca synowi.
- * @param[in] ch - wskaźnik na przyszłego syna @p node.
+ * @param[in] ch - wskaźnik na przyszłego syna węzła @p node.
  */
 static void radixTreeChangeSon(RadixTreeNode node, char son,
                                RadixTreeNode ch) {
@@ -211,8 +211,14 @@ static void radixTreeChangeSon(RadixTreeNode node, char son,
 
 /**
  * @brief Przesuwa dopasowanie w ramach węzła.
+ * Po wykonaniu się procedury wartość wkaźnika @p *txt oznacza, że
+ * wszystkie znaki występujące przed @p **txt występują w drzewie
+ * jako podciąg pewnej drogi od korzenia do liścia.
+ * Wartość wskaźnika @p nodeTxtPtr oznacza, że wszystkie znaki występujące
+ * na krawędzi wchodzącej do @p node wyłącznie są sufiksem dopasowania
+ * @p *txt.
  * @param[in] node - wskaźnik na węzeł drzewa.
- * @param[in,out] txt - wskaźnik na wskaźnik na dopasowanie.
+ * @param[in,out] txt - wskaźnik na wskaźnik na dopasowanie numeru.
  *        @p *txt
  *        po próbie dopasowania wskazuje
  *        na element za ostatnim pasującym, w przypadku pełnego
@@ -251,6 +257,7 @@ static int radixTreeMoveTxt(RadixTreeNode node, const char **txt,
 
 /**
  * @brief Próbuje dopasować kolejny węzeł (krawędź do niego wchodzącą).
+ * @see radixTreeMoveTxt
  * @param[in,out] node - wskaźnik na wskaźnik na wierzchołek.
  *        Po udanym przesunięciu @p *node wskazuje na następny wierzchołek, ew
  *        na węzeł dla którego krawędź udało się częściowo dopasować.
@@ -282,7 +289,8 @@ static int radixTreeMove(RadixTreeNode *node, const char **txt,
  * @param[out] ptr - miejsce gdzie powinno powstać rozgałęzienie.
  * @param[out] txtMatchPtr - ustawia na taką pozycję że cały tekst do
  *       @p *txtMatchPtr wyłącznie jest dopasowany w drzewie
- *       @p tree.
+ *       @p tree (istnieje droga od korzenia do liścia idąca w dół,
+ *       taka, że @p txt jest jej podciągiem).
  * @param[out] nodeMatchPtr - wskaźnik na dopasowanie krawędzi wchodzącej do
  *       @p *ptr.
  * @return W przypadku gdy węzeł reprezentujący @p txt istnieje w drzewie
@@ -316,7 +324,7 @@ static int radixTreeFindEx(RadixTree tree,
 /**
  * @see radixTreeFind
  * @param[in] node - wskaźnik na węzeł drzewa.
- * @param[in] txt - wskaźnik na tekst *nodeMatchPtr z radixTreeFindEx.
+ * @param[in] txt - wskaźnik na tekst *nodeMatchPtr z @ref radixTreeFindEx.
  * @return Długość dopasowania krawędzi wchodzącej do węzła @p node.
  */
 static size_t radixTreeHowManyCharsOffset(RadixTreeNode node,
@@ -495,13 +503,10 @@ void radixTreeDelete(RadixTree tree, void (*f)(void *, void *), void *fData) {
     radixTreeDeleteSubTree(tree, f, fData);
 }
 
-#pragma GCC diagnostic push
-#pragma GCC diagnostic ignored "-Wunused-parameter"
-
 void radixTreeEmptyDelFunction(void *ptrA, void *ptrB) {
+    (void)ptrA;
+    (void)ptrB;
 }
-
-#pragma GCC diagnostic pop
 
 void *radixTreeGetNodeData(RadixTreeNode node) {
     return node->data;
@@ -513,6 +518,7 @@ RadixTreeNode radixTreeFather(RadixTreeNode node) {
 
 /**
  * @brief Zwraca wskaźnik na pierwszego syna węzła @p node.
+ * Zwraca wskaźnik na syna węzła @p node o najmniejszym numerze.
  * @param[in] node - wskaźnik na węzeł.
  * @return Wskaźnik na pierwszego syna węzła @p node.
  */

@@ -22,19 +22,19 @@ struct PhoneForward {
      * @brief Drzewo reprezentujące przekierowania.
      * Jego węzły przechowują informacje
      * o tym na jaki numer zostały przekierowane (ForwardData->treeNode)
-     * oraz o węźle na liście przechowującej informacje pozwalającą odwrócić
+     * oraz o węźle na liście przechowującym informację pozwalającą odwrócić
      * przekierowanie (ForwardData->listNode).
-     * Sam węzeł reprezentuje numer.
+     * Sam węzeł drzewa reprezentuje numer.
      * @see ForwardData
      */
     RadixTree forward;
 
     /**
      * @brief Drzewo reprezentujące odwrócone przekierowania.
-     * Pozwala na odtworzenie numerów przekierowywanych na dany numer.
-     * Jego węzły przechowują listy wskaźników na węzły
+     * Pozwala na odtworzenie numerów przekierowanych na dany numer.
+     * Jego wierzchołki przechowują listy wskaźników na wierzchołki
      * drzewa forward przekierowywane na
-     * dany węzeł.
+     * dany wierzchołek.
      * Sam węzeł reprezentuje numer.
      */
     RadixTree backward;
@@ -114,9 +114,6 @@ struct PhoneForward *phfwdNew(void) {
     }
 }
 
-#pragma GCC diagnostic push
-#pragma GCC diagnostic ignored "-Wunused-parameter"
-
 /**
  * @brief Do usuwania drzewa PhoneForward->forward.
  * @see PhoneForward
@@ -127,13 +124,10 @@ struct PhoneForward *phfwdNew(void) {
 static void phfwdForwardJustDelete(void *ptrA, void *ptrB) {
     assert(ptrA != NULL);
     assert(ptrB == NULL);
+    (void)ptrA;
+    (void)ptrB;
     free(ptrA);
 }
-
-#pragma GCC diagnostic pop
-
-#pragma GCC diagnostic push
-#pragma GCC diagnostic ignored "-Wunused-parameter"
 
 /**
  * @brief Do usuwania drzewa PhoneForward->backward.
@@ -145,10 +139,10 @@ static void phfwdForwardJustDelete(void *ptrA, void *ptrB) {
 static void phfwdBackwardJustDelete(void *ptrA, void *ptrB) {
     assert(ptrA != NULL);
     assert(ptrB == NULL);
+    (void)ptrA;
+    (void)ptrB;
     listDestroy(ptrA);
 }
-
-#pragma GCC diagnostic pop
 
 void phfwdDelete(struct PhoneForward *pf) {
     if (pf == NULL) {
@@ -200,6 +194,7 @@ static bool phfwdPrepareTreesForAdd(struct PhoneForward *pf,
 
 /**
  * @brief Uzupełnia dane w węźle bw.
+ * Uzupełnia dane w węźle bw pozwalające odwrócić przekierowanie.
  * @param[in] bw - wskaźnik na węzeł.
  * @param[in] redirection - wskaźnik na węzeł reprezentujący
  *        prefiks przekierowywany na @p bw.
@@ -254,6 +249,8 @@ struct ForwardData {
 
 /**
  * @brief Do balansowania drzewa w przypadku nieudanego wstawienia.
+ * Usuwa zbyteczne węzły.
+ * @see radixTreeBalance
  * @param[in] fwInsert - wskaźnik na
  * @param[in] bwInsert
  */
@@ -361,9 +358,6 @@ bool phfwdAdd(struct PhoneForward *pf, const char *num1, const char *num2) {
 
 }
 
-#pragma GCC diagnostic push
-#pragma GCC diagnostic ignored "-Wunused-parameter"
-
 /**
  * @brief Usuwa odpowiedniki danych z PhoneForward->forward w backward.
  * Używany w radixTreeDeleteSubTree.
@@ -375,13 +369,12 @@ bool phfwdAdd(struct PhoneForward *pf, const char *num1, const char *num2) {
 static void phfwdRemoveCleaner(void *data, void *backwardTree) {
     assert(data != NULL);
     assert(backwardTree != NULL);
+    (void)backwardTree;
     ForwardData fd = (ForwardData) data;
     phfwdDeleteNodeFromBackwardTree(fd);
     free(fd);
 
 }
-
-#pragma GCC diagnostic pop
 
 void phfwdRemove(struct PhoneForward *pf, const char *num) {
     if (!phfwdIsNumber(num)) {
@@ -518,6 +511,7 @@ const char *phnumGet(const struct PhoneNumbers *pnum, size_t idx) {
 
 /**
  * @brief Maksymalna liczba numerów zwróconych w wyniku phfwdGetReverse.
+ * Razem z powtórzeniami.
  * @param[in] node - wskaźnik na węzeł
  * @return Maksymalna liczba numerów zwróconych w wyniku phfwdGetReverse od
  *         tekstu reprezentowanego przez węzeł @p node.
