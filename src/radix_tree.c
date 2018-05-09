@@ -651,6 +651,7 @@ void radixTreeFold(RadixTree tree, void (*f)(void *, void *), void *fData) {
 
 void radixTreeCountDataFunction(void *ptrA, void *ptrB) {
     size_t *counter = (size_t *) ptrB;
-    assert(ptrA != NULL);
-    (*counter)++;
+    if (ptrA != NULL) {
+        (*counter)++;
+    }
 }
