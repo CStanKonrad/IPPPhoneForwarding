@@ -114,6 +114,9 @@ struct PhoneForward *phfwdNew(void) {
     }
 }
 
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wunused-parameter"
+
 /**
  * @brief Do usuwania drzewa PhoneForward->forward.
  * @see PhoneForward
@@ -127,6 +130,11 @@ static void phfwdForwardJustDelete(void *ptrA, void *ptrB) {
     free(ptrA);
 }
 
+#pragma GCC diagnostic pop
+
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wunused-parameter"
+
 /**
  * @brief Do usuwania drzewa PhoneForward->backward.
  * @see PhoneForward
@@ -139,6 +147,8 @@ static void phfwdBackwardJustDelete(void *ptrA, void *ptrB) {
     assert(ptrB == NULL);
     listDestroy(ptrA);
 }
+
+#pragma GCC diagnostic pop
 
 void phfwdDelete(struct PhoneForward *pf) {
     if (pf == NULL) {
@@ -351,6 +361,9 @@ bool phfwdAdd(struct PhoneForward *pf, const char *num1, const char *num2) {
 
 }
 
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wunused-parameter"
+
 /**
  * @brief Usuwa odpowiedniki danych z PhoneForward->forward w backward.
  * Używany w radixTreeDeleteSubTree.
@@ -367,6 +380,8 @@ static void phfwdRemoveCleaner(void *data, void *backwardTree) {
     free(fd);
 
 }
+
+#pragma GCC diagnostic pop
 
 void phfwdRemove(struct PhoneForward *pf, const char *num) {
     if (!phfwdIsNumber(num)) {
