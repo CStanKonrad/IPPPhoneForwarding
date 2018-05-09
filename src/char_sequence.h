@@ -10,6 +10,8 @@
 #define TELEFONY_CAHR_SEQUENCE_H
 
 #include <stdbool.h>
+#include <stddef.h>
+#include <stdlib.h>
 
 /**
  * @brief Struktura reprezentująca ciąg znaków.
@@ -20,7 +22,7 @@ struct CharSequence;
 /**
  * @brief Wskaźnik na strukturę strukturę reprezentującą ciąg znaków.
  */
-typedef struct CharSequence* CharSequence;
+typedef struct CharSequence *CharSequence;
 
 /**
  * @brief Tworzy ciąg znaków z cstringa.
@@ -56,7 +58,7 @@ char charSequenceGetChar(CharSequence sequence);
 bool charSequenceNextChar(CharSequence *sequence, char *ch);
 
 /**
- * @breif Liczba elementów w ciągu @p sequence.
+ * @brief Liczba elementów w ciągu @p sequence.
  * @param sequence - wskaźnik na ciąg znaków.
  * @return Liczba elementów w ciągu @p sequence.
  */

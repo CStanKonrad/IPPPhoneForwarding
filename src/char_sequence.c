@@ -6,14 +6,22 @@
  * @date 06.05.2018
  */
 
-#include <stdlib.h>
 #include <assert.h>
 #include <string.h>
 #include "char_sequence.h"
 
-
+/**
+ * @brief Struktura opisująca element ciągu znaków.
+ */
 struct CharSequence {
+    /**
+     * @brief Litera w ciągu.
+     */
     char letter;
+
+    /**
+     * @brief Następny element w ciągu.
+     */
     CharSequence next;
 };
 
@@ -97,11 +105,9 @@ size_t charSequenceLength(CharSequence sequence) {
 }
 
 
-
-
 const char *charSequenceToCString(CharSequence sequence) {
     size_t length = charSequenceLength(sequence);
-    char *result = malloc(length + (size_t)1);
+    char *result = malloc(length + (size_t) 1);
 
     if (result == NULL) {
         return NULL;
@@ -134,16 +140,15 @@ bool charSequenceEqualToString(CharSequence sequence, const char *str) {
     return !charSequenceNextChar(&ptr, &let);
 
 
-
-
-
 }
 
 #pragma GCC diagnostic push
 #pragma GCC diagnostic ignored "-Wunused-parameter"
+
 CharSequence charSequenceSequenceEnd(CharSequence sequence) {
     return NULL;
 }
+
 #pragma GCC diagnostic pop
 
 char charSequenceGetChar(CharSequence sequence) {
