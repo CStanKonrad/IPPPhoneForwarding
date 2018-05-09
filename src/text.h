@@ -14,16 +14,16 @@
  * @brief Kopiuje @p length liter tekstu.
  * Kopiuje @p length liter tekstu @p src do @p dest
  * wstawiając na końcu '\0'.
- * @param src - wskaźnik na tekst źródłowy.
- * @param dest - wskaźnik na miejsce docelowe.
- * @param length - długość tekstu do skopiowania.
+ * @param[in] src - wskaźnik na tekst źródłowy.
+ * @param[out] dest - wskaźnik na miejsce docelowe.
+ * @param[in] length - długość tekstu do skopiowania.
  */
 void copyText(const char *src, char *dest, size_t length);
 
 
 /**
  * @brief Duplikuje text.
- * @param txt - tekst do zduplikowania.
+ * @param[in] txt - tekst do zduplikowania.
  * @return Wskaźnik do duplikatu tekstu @p txt,
  *         w przypadku problemów z pamięcią zwraca NULL.
  */
@@ -32,7 +32,7 @@ char *duplicateText(const char *txt);
 
 /**
  * @brief Wskaźnik na koniec.
- * @param str - tekst do zduplikowania.
+ * @param[in] str - tekst.
  * @return Wskaźnik do koniec tekstu @p str.
  */
 const char *stringEnd(const char *str);
@@ -40,8 +40,8 @@ const char *stringEnd(const char *str);
 
 /**
  * @brief Łączy dwa teksty.
- * @param a - wskaźnik na tekst.
- * @param b - wskaźnik na tekst.
+ * @param[in] a - wskaźnik na tekst.
+ * @param[in] b - wskaźnik na tekst.
  * @return Wskaźnik na tekst będący połączaniem a i b,
  *         w przypadku problemów z pamięciom NULL.
  */

@@ -29,7 +29,9 @@ set(SOURCE_FILES
     src/radix_tree.h
     src/radix_tree.c
     src/text.c
-    src/text.h)
+    src/text.h 
+    src/char_sequence.c 
+    src/char_sequence.h)
 
 # Wskazujemy plik wykonywalny.
 add_executable(phone_forward ${SOURCE_FILES})

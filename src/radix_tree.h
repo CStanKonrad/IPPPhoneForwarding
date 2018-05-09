@@ -1,5 +1,5 @@
 /** @file
- * Interfejs struktury reprezentująca
+ * Interfejs modułu reprezentującego
  * skompresowane drzewo TRIE.
  * https://en.wikipedia.org/wiki/Radix_tree
  * @remarks Drzewo samo się nie balansuje.
@@ -13,12 +13,22 @@
 #define TELEFONY_RADIX_TREE_H
 
 #include <stddef.h>
+#include "char_sequence.h"
 
 /**
  * @see RadixTreeNode
  */
 #define RADIX_TREE_NUMBER_OF_SONS 10
 
+/**
+ * @see radixTreeFind
+ */
+#define RADIX_TREE_NODE_MATCH_FULL 1
+
+/**
+ * @see radixTreeFind
+ */
+#define RADIX_TREE_NODE_MATCH_PARTIAL 0
 
 /**
  * @see RadixTreeNode
@@ -62,7 +72,7 @@ struct RadixTreeNode {
      * Korzeń przechowuje wartość RADIX_TREE_ROOT_TXT.
      * @see RADIX_TREE_ROOT_TXT
      */
-    const char *txt;
+    CharSequence txt;
 
     /**
      * @brief Dane przechowywane przez węzeł.
@@ -81,14 +91,14 @@ struct RadixTreeNode {
     RadixTreeNode sons[RADIX_TREE_NUMBER_OF_SONS];
 
     /**
-     * @brief Ojciec węzłą w drzewie.
+     * @brief Ojciec węzła w drzewie.
      */
     RadixTreeNode father;
 };
 
 
 /**
- * @brief Tworzy drzewo i inicjalizuje je.
+ * @brief Tworzy drzewo i inicjuje je.
  * #### Złożoność
  * O(1)
  * @return Wskaźnik na stworzone drzewo, w przypadku
@@ -107,14 +117,6 @@ RadixTree radixTreeCreate();
 int radixTreeIsRoot(RadixTreeNode node);
 
 /**
- * @see radixTreeFind
- * @param[in] node - wskaźnik na węzeł drzewa.
- * @param[in] txt - wskaźnik na tekst *nodeMatchPtr z radixTreeFind.
- * @return Długość dopasowania krawędzi wchodzącej do węzła @p node.
- */
-size_t radixTreeHowManyCharsOffset(RadixTreeNode node, const char *txt);
-
-/**
  * @param[in] node - wskaźnik na węzeł.
  * @return Ilość znaków na krawędzi wchodzącej do @p node.
  */
@@ -126,18 +128,21 @@ size_t radixTreeHowManyChars(RadixTreeNode node);
  * @param[in] txt - wskaźnik na tekst.
  * @param[out] ptr - miejsce gdzie powinno powstać rozgałęzienie.
  * @param[out] txtMatchPtr - ustawia na taką pozycję że cały tekst do
- *             *txtMatchPtr wyłącznie jest podciągiem jakiegoś słowa w drzewie
- *             @p tree.
- * @param[out] nodeMatchPtr - ustawia na taką pozycję że cały tekst do
- *             *nodeMatchPtr wyłącznie został użyty w dopasowaniu z
- *             @p txtMatchPtr. W skrócie reprezentuje dopasowanie krawędzi.
+ *       *txtMatchPtr wyłącznie jest dopasowany w drzewie
+ *       @p tree.
+ * @param[out] nodeMatch - ilość znaków dopasowanych na krawędzi wchodzącej do
+ *       @p *ptr.
+ * @param[out] nodeMatchMode - jeżeli w pełni dopasowano krawędź wchodzącą do
+ *       @p *ptr to ustawiany jest na RADIX_TREE_NODE_MATCH_FULL,
+ *       w przeciwnym przypadku na RADIX_TREE_NODE_MATCH_PARTIAL.
  * @return W przypadku gdy węzeł reprezentujący @p txt istnieje w drzewie
  *         RADIX_TREE_FOUND, w przypadku gdy @p txt jest podciągiem
  *         tekstu reprezentowanego przez któryś z węzłów RADIX_TREE_SUBSTR,
  *         w przeciwnym wypadku RADIX_TREE_NOT_FOUND.
  */
 int radixTreeFind(RadixTree tree, const char *txt, RadixTreeNode *ptr,
-                  const char **txtMatchPtr, const char **nodeMatchPtr);
+                  const char **txtMatchPtr, size_t *nodeMatch,
+                  int *nodeMatchMode);
 
 /**
  * @brief Okrojona wersja radixTreeFind.
@@ -178,8 +183,8 @@ void radixTreeEmptyDelFunction(void *ptrA, void *ptrB);
 /**
  * @brief Zlicza liczbę węzłów z przypisanymi danymi
  * @see radixTreeFold
- * @param[out] ptrA - wskaźnik na licznik (typu size_t)
- * @param ptrB - nieużywany wskaźnik
+ * @param[in] ptrA - wskaźnik na dane
+ * @param[out] ptrB - wskaźnik na licznik (typu size_t)
  */
 void radixTreeCountDataFunction(void *ptrA, void *ptrB);
 
@@ -216,7 +221,7 @@ void *radixTreeGetNodeData(RadixTreeNode node);
 
 /**
  * @brief Przypisuje dane do węzła
- * Sprawia że węzeł @p node posiada wskaźnik na dane wskazynawe przez
+ * Sprawia że węzeł @p node posiada wskaźnik na dane wskazywane przez
  * @p ptr.
  * @param[in] node - wskaźnik na węzeł.
  * @param[in] ptr - wskaźnik na dane.

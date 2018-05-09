@@ -12,7 +12,7 @@
 
 
 /**
- * @brief Inicjalizuje węzeł @p node.
+ * @brief Inicjuje węzeł @p node.
  * @param[in] node  - wskaźnik na węzeł.
  */
 static void listInitNode(ListNode node) {
@@ -21,7 +21,7 @@ static void listInitNode(ListNode node) {
 }
 
 /**
- * @brief Tworzy i inicjalizuje węzeł listy.
+ * @brief Tworzy i Inicjuje węzeł listy.
  * @return Wskaźnik na nowo stworzony i zainicjowany węzeł,
  *         w przypadku problemów z przydzieleniem pamięci NULL.
  */
@@ -39,7 +39,7 @@ static ListNode listAllocNode() {
 }
 
 /**
- * @brief Inicjalizuje strukturę listy @p list.
+ * @brief Inicjuje strukturę listy @p list.
  * @param[in] list  - wskaźnik na listę.
  */
 static void listInitList(List list) {
