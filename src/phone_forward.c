@@ -58,7 +58,8 @@ struct PhoneNumbers {
 /**
  * @brief Tworzy strukturę do przechowywania numerów.
  * @param[in] howMany - ilość przechowywanych numerów.
- * @return Wskaźnik na strukturę do przechowywania @p howMany numerów.
+ * @return Wskaźnik na strukturę do przechowywania @p howMany numerów,
+ *         NULL w przypadku problemów z pamięcią.
  */
 static struct PhoneNumbers *phfwdCreatePhoneNumbersStructure(size_t howMany) {
     struct PhoneNumbers *result = malloc(sizeof(struct PhoneNumbers));
@@ -83,7 +84,8 @@ static struct PhoneNumbers *phfwdCreatePhoneNumbersStructure(size_t howMany) {
 /**
  * @brief Tworzy strukturę przechowującą zero numerów.
  * @see phfwdCreatePhoneNumbersStructure.
- * @return Wskaźnik na strukturę przechowującą zero numerów.
+ * @return Wskaźnik na strukturę przechowującą zero numerów,
+ *         NULL w przypadku problemów z pamięcią.
  */
 static struct PhoneNumbers *phfwdEmptySequenceResult() {
     struct PhoneNumbers *result = phfwdCreatePhoneNumbersStructure(0);

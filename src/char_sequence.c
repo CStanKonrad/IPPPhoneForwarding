@@ -3,7 +3,7 @@
  * ciąg znaków.
  * @author Konrad Staniszewski
  * @copyright Konrad Staniszewski
- * @date 06.05.2018
+ * @date 13.05.2018
  */
 
 #include <assert.h>
@@ -27,8 +27,8 @@ struct CharSequence {
 
 /**
  * @brief inicjuje węzeł ciągu znaków.
- * @param node - wskaźnik na węzeł.
- * @param letter - znak który ma być przechowywany w węźle.
+ * @param[in] node - wskaźnik na węzeł.
+ * @param[in] letter - znak który ma być przechowywany w węźle.
  */
 static void charSequenceInitNewNode(CharSequence node, char letter) {
     assert(node != NULL);
@@ -38,7 +38,7 @@ static void charSequenceInitNewNode(CharSequence node, char letter) {
 
 /**
  * @brief Usuwa węzeł.
- * @param node - wskaźnik na węzeł.
+ * @param[in] node - wskaźnik na węzeł.
  */
 static void charSequenceDeleteNode(CharSequence node) {
     assert(node != NULL);
@@ -142,14 +142,11 @@ bool charSequenceEqualToString(CharSequence sequence, const char *str) {
 
 }
 
-#pragma GCC diagnostic push
-#pragma GCC diagnostic ignored "-Wunused-parameter"
-
 CharSequence charSequenceSequenceEnd(CharSequence sequence) {
+    (void)sequence;
     return NULL;
 }
 
-#pragma GCC diagnostic pop
 
 char charSequenceGetChar(CharSequence sequence) {
     if (sequence == NULL) {

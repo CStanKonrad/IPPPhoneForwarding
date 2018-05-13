@@ -70,6 +70,8 @@ static void radixTreeFreeNode(RadixTreeNode node) {
  * #### Złożoność
  * O(1)
  * @param[in] tree  - wskaźnik na drzewo.
+ * @return RADIX_TREE_OPERATION_FAIL w przypadku problemów,
+ *         w przeciwnym przypadku RADIX_TREE_OPERATION_SUCCESS.
  */
 static int radixTreeInitTree(RadixTree tree) {
     radixTreeInitNode(tree);
@@ -540,7 +542,8 @@ static RadixTreeNode radixTreeFirstSon(RadixTreeNode node) {
  * @remarks Adres węzła ba nie ulega zmianie.
  * @param[in] a - wskaźnik na węzeł (zostanie usunięty po scaleniu).
  * @param[in] b - wskaźnik na węzeł (zostanie tym scalonym).
- * @return
+ * @return  W przypadku problemów RADIX_TREE_OPERATION_FAIL,
+ *          w przeciwnym przypadku RADIX_TREE_OPERATION_SUCCESS.
  */
 static int radixTreeMerge(RadixTreeNode a, RadixTreeNode b) {
 

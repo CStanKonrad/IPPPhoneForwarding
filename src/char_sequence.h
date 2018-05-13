@@ -3,7 +3,7 @@
  * ciąg znaków.
  * @author Konrad Staniszewski
  * @copyright Konrad Staniszewski
- * @date 06.05.2018
+ * @date 13.05.2018
  */
 
 #ifndef TELEFONY_CAHR_SEQUENCE_H
@@ -35,7 +35,7 @@ CharSequence charSequenceFromCString(const char *str);
 /**
  * @brief Usuwa ciąg znaków.
  * @remarks node musi być wskaźnikiem na początek ciągu znaków.
- * @param node - wskaźnik na początek ciągu znaków.
+ * @param[in] node - wskaźnik na początek ciągu znaków.
  */
 void charSequenceDelete(CharSequence node);
 
@@ -66,22 +66,24 @@ size_t charSequenceLength(CharSequence sequence);
 
 /**
  * @brief Ciąg znaków w stylu C.
- * @param sequence - wskaźnik na ciąg znaków.
- * @return Ciąg znaków w stylu C.
+ * @remarks Wynik należy zwolnić przy pomocy free.
+ * @param[in] sequence - wskaźnik na ciąg znaków.
+ * @return Ciąg znaków w stylu C, NULL w przypadku
+ *         problemów z pamięcią.
  */
 const char *charSequenceToCString(CharSequence sequence);
 
 /**
  * @brief Sprawdza czy @p sequence odpowiada @p str.
- * @param sequence - wskaźnik na ciąg znaków.
- * @param str - wskaźnik na ciąg znaków w stylu c.
+ * @param[in] sequence - wskaźnik na ciąg znaków.
+ * @param[in] str - wskaźnik na ciąg znaków w stylu c.
  * @return Jeżeli odpowiada to true, w przeciwnym wypadku false.
  */
 bool charSequenceEqualToString(CharSequence sequence, const char *str);
 
 /**
  * @brief Zwraca Wskaźnik reprezentujący koniec @p sequence.
- * @param sequence - wskaźnik na ciąg znaków.
+ * @param[in] sequence - wskaźnik na ciąg znaków.
  * @remarks Koniec oznacza tu wskaźnik na pozycję informującą, że ciąg się
  *         skończył.
  * @return Wskaźnik reprezentujący koniec @p sequence.
@@ -90,15 +92,15 @@ CharSequence charSequenceSequenceEnd(CharSequence sequence);
 
 /**
  * @brief Zwraca Wskaźnik reprezentujący ostatni element @p sequence.
- * @param sequence - wskaźnik na ciąg znaków.
+ * @param[in] sequence - wskaźnik na ciąg znaków.
  * @return Wskaźnik reprezentujący ostatni element @p sequence.
  */
 CharSequence charSequenceLast(CharSequence sequence);
 
 /**
  * @brief ustawia następnika elementu ciągu.
- * @param a - element ciągu.
- * @param next - następnik.
+ * @param[in] a - element ciągu.
+ * @param[in] next - następnik.
  */
 void charSequenceSetNext(CharSequence a, CharSequence next);
 
