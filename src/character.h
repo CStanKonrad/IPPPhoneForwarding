@@ -97,6 +97,13 @@ int characterIsDigit(int characterCode);
 /**
  * @param[in] characterCode - kod znaku.
  * @return Niezerowa wartość jeżeli characterCode reprezentuje:
+ * literę.
+ */
+int characterIsLetter(int characterCode);
+
+/**
+ * @param[in] characterCode - kod znaku.
+ * @return Niezerowa wartość jeżeli characterCode reprezentuje:
  * minus.
  */
 int characterIsMinus(int characterCode);

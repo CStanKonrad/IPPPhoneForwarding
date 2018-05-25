@@ -56,6 +56,10 @@ int characterIsDigit(int characterCode) {
     return isdigit(characterCode);
 }
 
+int characterIsLetter(int characterCode) {
+    return isalpha(characterCode);
+}
+
 int characterIsMinus(int characterCode) {
     return characterCode == '-';
 }

@@ -38,6 +38,8 @@ struct PhoneBases {
 
 PhoneBases phoneBasesCreateNewPhoneBases();
 
+void phoneBasesCreateDestroyPhoneBases(PhoneBases pb);
+
 size_t phoneBasesHowManyBases(PhoneBases pb);
 
 struct PhoneForward* phoneBasesGetBase(PhoneBases pb, const char *id);
@@ -45,6 +47,8 @@ struct PhoneForward* phoneBasesGetBase(PhoneBases pb, const char *id);
 struct PhoneForward* phoneBasesAddBase(PhoneBases pb, const char *id);
 
 bool phoneBasesDelBase(PhoneBases pb, const char *id);
+
+
 
 
 #endif //TELEFONY_PHONE_BASES_SYSTEM_H

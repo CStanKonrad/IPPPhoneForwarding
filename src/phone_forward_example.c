@@ -4,7 +4,7 @@
 #include "phone_forward.h"
 #include "input.h"
 #define MAX_LEN 23
-
+/*
 int main() {
 
     char num1[MAX_LEN + 1], num2[MAX_LEN + 1];
@@ -149,4 +149,4 @@ int main() {
     phfwdDelete(pf);
 
   return 0;
-}
+}*/

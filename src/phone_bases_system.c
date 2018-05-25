@@ -23,6 +23,7 @@ static size_t phoneBasesHashId(const char *id) {
     while (*ptr != '\0') {
         result = ((result * PHONE_BASES_HASH_BASE) + (*ptr))
                 % PHONE_BASES_HASH_MOD;
+        ptr++;
     }
 
     return result;
@@ -53,6 +54,20 @@ PhoneBases phoneBasesCreateNewPhoneBases() {
     phoneBasesInitPhoneBases(pb);
 
     return pb;
+}
+
+static void phoneBasesDeleteNodesList(PhoneBasesNode node) {
+    if (node != NULL) {
+        phoneBasesDeleteNodesList(node->next);
+        node->next = NULL;
+        phoneBasesFreeNode(node);
+    }
+}
+
+void phoneBasesCreateDestroyPhoneBases(PhoneBases pb) {
+    phoneBasesDeleteNodesList(pb->basesList);
+    pb->basesList = NULL;
+    free(pb);
 }
 
 size_t phoneBasesHowManyBases(PhoneBases pb) {
