@@ -31,7 +31,14 @@ set(SOURCE_FILES
     src/text.c
     src/text.h 
     src/char_sequence.c 
-    src/char_sequence.h)
+    src/char_sequence.h
+    src/input.h
+    src/input.c
+    src/character.h
+    src/character.c
+    src/vector.h
+    src/vector.c
+    src/stdfunc.h src/parser.c src/parser.h src/phone_bases_system.c src/phone_bases_system.h src/main.c)
 
 # Wskazujemy plik wykonywalny.
 add_executable(phone_forward ${SOURCE_FILES})

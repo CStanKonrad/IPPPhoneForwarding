@@ -130,7 +130,7 @@ ALWAYS_DETAILED_SEC    = NO
 # If the INLINE_INHERITED_MEMB tag is set to YES, doxygen will show all
 # inherited members of a class in the documentation of that class as if those
 # members were ordinary class members. Constructors, destructors and assignment
-# operators of the base classes will not be shown.
+# operators of the baseInfo classes will not be shown.
 # The default value is: NO.
 
 INLINE_INHERITED_MEMB  = NO
@@ -454,7 +454,7 @@ EXTRACT_LOCAL_METHODS  = NO
 
 # If this flag is set to YES, the members of anonymous namespaces will be
 # extracted and appear in the documentation as a namespace called
-# 'anonymous_namespace{file}', where file will be replaced with the base name of
+# 'anonymous_namespace{file}', where file will be replaced with the baseInfo name of
 # the file that contains the anonymous namespace. By default anonymous namespace
 # are hidden.
 # The default value is: NO.
@@ -1134,7 +1134,7 @@ HTML_EXTRA_STYLESHEET  =
 
 # The HTML_EXTRA_FILES tag can be used to specify one or more extra images or
 # other source files which should be copied to the HTML output directory. Note
-# that these files will be copied to the base HTML output directory. Use the
+# that these files will be copied to the baseInfo HTML output directory. Use the
 # $relpath^ marker in the HTML_HEADER and/or HTML_FOOTER files to load these
 # files. In the HTML_STYLESHEET file, use the file name only. Also note that the
 # files will be copied as-is; there are no commands or markers available.
@@ -2115,7 +2115,7 @@ PERL_PATH              = /usr/bin/perl
 #---------------------------------------------------------------------------
 
 # If the CLASS_DIAGRAMS tag is set to YES, doxygen will generate a class diagram
-# (in HTML and LaTeX) for classes with base or super classes. Setting the tag to
+# (in HTML and LaTeX) for classes with baseInfo or super classes. Setting the tag to
 # NO turns the diagrams off. Note that this option also works with HAVE_DOT
 # disabled, but it is recommended to install and use dot, since it yields more
 # powerful graphs.
@@ -2155,7 +2155,7 @@ HIDE_UNDOC_RELATIONS   = YES
 HAVE_DOT               = YES
 
 # The DOT_NUM_THREADS specifies the number of dot invocations doxygen is allowed
-# to run in parallel. When set to 0 doxygen will base this on the number of
+# to run in parallel. When set to 0 doxygen will baseInfo this on the number of
 # processors available in the system. You can set it explicitly to a value
 # larger than 0 to get control over the balance between CPU load and processing
 # speed.

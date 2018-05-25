@@ -2,10 +2,11 @@
 #include <stdio.h>
 #include <string.h>
 #include "phone_forward.h"
-
+#include "input.h"
 #define MAX_LEN 23
 
 int main() {
+
     char num1[MAX_LEN + 1], num2[MAX_LEN + 1];
     struct PhoneForward *pf;
     const struct PhoneNumbers *pnum;
