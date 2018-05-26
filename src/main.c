@@ -29,6 +29,9 @@
 #define ERROR_EXIT_CODE 1
 #define SUCCESS_EXIT_CODE 0
 
+//todo 2?
+#define OPERATOR_POSITION_OFFSET 0
+
 
 static PhoneBases  bases = NULL;
 static Vector word1 = NULL, word2 = NULL;
@@ -148,6 +151,12 @@ static void readOperationNew() {
 
     makeVectorCStringCompatible(word1);
 
+    if (strcmp(vectorBegin(word1), PARSER_OPERATOR_DELETE) == 0
+        || strcmp(vectorBegin(word1), PARSER_OPERATOR_NEW) == 0) {
+        printErrorMessage(BASIC_ERROR_SUFFIX, parserGetReadBytes(&parser) - OPERATOR_POSITION_OFFSET);
+        exit_and_clean(ERROR_EXIT_CODE);
+    }
+
     if (vectorSize(word1) <= 1) {
         printErrorMessage(BASIC_ERROR_SUFFIX, parserGetReadBytes(&parser));
         exit_and_clean(ERROR_EXIT_CODE);
@@ -162,8 +171,7 @@ static void readOperationNew() {
 
 }
 
-static void readOperationDeleteNumber() {
-    size_t operatorPos = parserGetReadBytes(&parser);
+static void readOperationDeleteNumber(size_t operatorPos) {
     if (!parserReadNumber(&parser, word1)) {
         printErrorMessage(MEMORY_ERROR_SUFFIX, parserGetReadBytes(&parser));
         exit_and_clean(ERROR_EXIT_CODE);
@@ -179,8 +187,7 @@ static void readOperationDeleteNumber() {
     phfwdRemove(currentBase, vectorBegin(word1));
 }
 
-static void readOperationDeleteBase() {
-    size_t operatorPos = parserGetReadBytes(&parser);
+static void readOperationDeleteBase(size_t operatorPos) {
     if (!parserReadIdentificator(&parser, word1)) {
         printErrorMessage(MEMORY_ERROR_SUFFIX, parserGetReadBytes(&parser));
         exit_and_clean(ERROR_EXIT_CODE);
@@ -188,6 +195,13 @@ static void readOperationDeleteBase() {
     checkParserError();
 
     makeVectorCStringCompatible(word1);
+
+    if (strcmp(vectorBegin(word1), PARSER_OPERATOR_DELETE) == 0
+            || strcmp(vectorBegin(word1), PARSER_OPERATOR_NEW) == 0) {
+        printErrorMessage(BASIC_ERROR_SUFFIX, parserGetReadBytes(&parser) - OPERATOR_POSITION_OFFSET);
+        exit_and_clean(ERROR_EXIT_CODE);
+    }
+
     struct PhoneForward *toDel = phoneBasesGetBase(bases, vectorBegin(word1));
 
     if (toDel == NULL) {
@@ -205,6 +219,7 @@ static void readOperationDeleteBase() {
 
 
 static void readOperationDelete() {
+    size_t operatorPos = parserGetReadBytes(&parser) - strlen(PARSER_OPERATOR_DELETE) + 1;
     skipSkipable();
     checkEofError();
 
@@ -212,9 +227,9 @@ static void readOperationDelete() {
     checkParserError();
 
     if (nextType == PARSER_ELEMENT_TYPE_NUMBER) {
-        readOperationDeleteNumber();
+        readOperationDeleteNumber(operatorPos);
     } else if (nextType == PARSER_ELEMENT_TYPE_WORD) {
-        readOperationDeleteBase();
+        readOperationDeleteBase(operatorPos);
     } else {
         printErrorMessage(BASIC_ERROR_SUFFIX, parserGetReadBytes(&parser) + 1);
         exit_and_clean(ERROR_EXIT_CODE);
@@ -382,13 +397,13 @@ static void readOperation(int nextType) {
                 readOperatorRedirectWord1();
                 //todo
             } else {
-                printErrorMessage(BASIC_ERROR_SUFFIX, parserGetReadBytes(&parser));
+                printErrorMessage(BASIC_ERROR_SUFFIX, parserGetReadBytes(&parser) + 1);
                 exit_and_clean(ERROR_EXIT_CODE);
             }
 
 
         } else {
-            printErrorMessage(BASIC_ERROR_SUFFIX, parserGetReadBytes(&parser));
+            printErrorMessage(BASIC_ERROR_SUFFIX, parserGetReadBytes(&parser) + 1);
             exit_and_clean(ERROR_EXIT_CODE);
         }
 
