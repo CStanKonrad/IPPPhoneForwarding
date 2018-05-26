@@ -153,7 +153,8 @@ int parserReadOperator(Parser parser) {
         }
 
         if (!parserCharacterCanBeSkipped(inputPeekCharacter())
-                && !(inputPeekCharacter() == PARSER_COMMENT_SEQUENCE[0])) {
+                && (inputPeekCharacter() != PARSER_COMMENT_SEQUENCE[0])
+                && !(parserIsSingleCharacterOperator(inputPeekCharacter()))) {
             parser->isError = true;
             parser->readBytes = startPos;
             return PARSER_FAIL;

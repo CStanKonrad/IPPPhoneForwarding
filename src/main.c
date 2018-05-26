@@ -30,7 +30,7 @@
 #define SUCCESS_EXIT_CODE 0
 
 //todo 2?
-#define OPERATOR_POSITION_OFFSET 0
+#define OPERATOR_POSITION_OFFSET 2
 
 
 static PhoneBases  bases = NULL;
@@ -315,6 +315,7 @@ static void readOperatorRedirectWord1() {
     checkEofError();
 
     int nextType = parserNextType(&parser);
+    checkParserError();
 
     if (nextType != PARSER_ELEMENT_TYPE_NUMBER) {
         printErrorMessage(BASIC_ERROR_SUFFIX, parserGetReadBytes(&parser) + 1);
