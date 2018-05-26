@@ -15,7 +15,7 @@
 
 #define PARSER_COMMENT_SEQUENCE "$$"
 #define PARSER_OPERATOR_QM '?'
-#define PARSER_OPERATOR_REDIRECT '<'
+#define PARSER_OPERATOR_REDIRECT '>'
 #define PARSER_OPERATOR_NEW "NEW"
 #define PARSER_OPERATOR_DELETE "DEL"
 
@@ -34,7 +34,7 @@
 typedef struct Parser* Parser;
 
 struct Parser {
-    size_t readedBytes;
+    size_t readBytes;
     bool isError;
 };
 
@@ -54,5 +54,7 @@ int parserReadOperator(Parser parser);
 bool parserReadIdentificator(Parser parser, Vector destination);
 
 bool parserReadNumber(Parser parser, Vector destination);
+
+size_t parserGetReadBytes(Parser parser);
 
 #endif //TELEFONY_PARSER_H

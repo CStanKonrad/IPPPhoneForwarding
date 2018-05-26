@@ -10,7 +10,7 @@
 
 struct Parser parserCreateNew() {
     struct Parser result;
-    result.readedBytes = 0;
+    result.readBytes = 0;
     result.isError = false;
     return result;
 }
@@ -27,7 +27,7 @@ static bool parserSkipCharactersThatCanBeSkipped(Parser parser) {
     }
 
     size_t skipped = inputIgnoreWhile(parserCharacterCanBeSkipped);
-    parser->readedBytes += skipped;
+    parser->readBytes += skipped;
     return skipped != 0;
 }
 
@@ -38,7 +38,7 @@ static bool parserSkipComments(Parser parser) {
     }
 
     inputGetCharacter();
-    parser->readedBytes++;
+    parser->readBytes++;
 
     if (inputPeekCharacter() != PARSER_COMMENT_SEQUENCE[1]) {
         parser->isError = true;
@@ -46,22 +46,22 @@ static bool parserSkipComments(Parser parser) {
     }
 
     inputGetCharacter();
-    parser->readedBytes++;
+    parser->readBytes++;
 
 
     while (true) {
         int r = inputGetCharacter();
-        parser->readedBytes++;
+        parser->readBytes++;
         if (parserFinished(parser)) {
             if (characterIsEOF(r)) {
-                parser->readedBytes--;
+                parser->readBytes--;
             }
             parser->isError = true;
             return false;
         } else if (r == PARSER_COMMENT_SEQUENCE[0]
                 && inputPeekCharacter() == PARSER_COMMENT_SEQUENCE[1]) {
             inputGetCharacter();
-            parser->readedBytes++;
+            parser->readBytes++;
 
             return true;
         }
@@ -101,7 +101,7 @@ int parserNextType(Parser parser) {
         return PARSER_ELEMENT_TYPE_SINGLE_CHARACTER_OPERATOR;
     } else {
         inputGetCharacter();
-        parser->readedBytes++;
+        parser->readBytes++;
         parser->isError = true;
 
         return PARSER_FAIL;
@@ -114,7 +114,7 @@ int parserReadOperator(Parser parser) {
     }
 
     int ch = inputGetCharacter();
-    parser->readedBytes++;
+    parser->readBytes++;
     if (parserIsSingleCharacterOperator(ch)) {
         if (ch == PARSER_OPERATOR_QM) {
             return PARSER_ELEMENT_TYPE_OPERATOR_QM;
@@ -141,7 +141,7 @@ int parserReadOperator(Parser parser) {
         const char *ptr;
         for (ptr = toCmp; *ptr != '\0'; ptr++) {
             ch = inputGetCharacter();
-            parser->readedBytes++;
+            parser->readBytes++;
             if (ch != *ptr) {
                 parser->isError = true;
                 return PARSER_FAIL;
@@ -149,7 +149,7 @@ int parserReadOperator(Parser parser) {
         }
 
         if (!parserCharacterCanBeSkipped(inputPeekCharacter())
-                && !inputPeekCharacter() == PARSER_COMMENT_SEQUENCE[0]) {
+                && !(inputPeekCharacter() == PARSER_COMMENT_SEQUENCE[0])) {
             parser->isError = true;
             return PARSER_FAIL;
         }
@@ -166,14 +166,15 @@ static int parserIsLetterOrDigit(int characterCode) {
 bool parserReadIdentificator(Parser parser, Vector destination) {
     size_t prefSize = vectorSize(destination);
     int readStatus = inputReadWhile(parserIsLetterOrDigit, SIZE_MAX, destination);
-    parser->readedBytes += vectorSize(destination) - prefSize;
+    parser->readBytes += vectorSize(destination) - prefSize;
 
 
-    parser->readedBytes++;
-    if (!parserCharacterCanBeSkipped(inputGetCharacter())
-            && !parserFinished(parser)) {
+    //parser->readBytes++;
+    /*if (!parserCharacterCanBeSkipped(inputPeekCharacter())
+            && !parserFinished(parser)
+            && !parserIsSingleCharacterOperator(inputPeekCharacter())) {
         parser->isError = true;
-    }
+    }*/
 
     return readStatus == INPUT_READ_SUCCESS;
 }
@@ -181,16 +182,19 @@ bool parserReadIdentificator(Parser parser, Vector destination) {
 bool parserReadNumber(Parser parser, Vector destination) {
     size_t prefSize = vectorSize(destination);
     int readStatus = inputReadWhile(characterIsDigit, SIZE_MAX, destination);
-    parser->readedBytes += vectorSize(destination) - prefSize;
+    parser->readBytes += vectorSize(destination) - prefSize;
 
-    char tmp = inputPeekCharacter();
-    if (!parserCharacterCanBeSkipped(inputPeekCharacter())
+    /*if (!parserCharacterCanBeSkipped(inputPeekCharacter())
         && !parserFinished(parser)
             && !parserIsSingleCharacterOperator(inputPeekCharacter())) {
         parser->isError = true;
-    }
+    }*/
 
     return readStatus == INPUT_READ_SUCCESS;
+}
+
+size_t parserGetReadBytes(Parser parser) {
+    return parser->readBytes;
 }
 
 
