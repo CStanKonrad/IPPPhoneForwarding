@@ -81,6 +81,7 @@ struct PhoneForward *phoneBasesGetBase(PhoneBases pb, const char *id) {
         if (phoneBasesInfoEqualId(ptr->baseInfo, id, idHash)) {
             return ptr->baseInfo.base;
         }
+        ptr = ptr->next;
     }
     return NULL;
 }

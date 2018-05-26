@@ -13,6 +13,7 @@
 #include "parser.h"
 #include "phone_bases_system.h"
 #include "vector.h"
+#include "input.h"
 
 #define BASIC_ERROR_MESSAGE "ERROR"
 #define EOF_ERROR_SUFFIX "eof"
@@ -97,7 +98,10 @@ int main() {
                     int operator = parserReadOperator(&parser);
                     if (operator == PARSER_ELEMENT_TYPE_OPERATOR_NEW) {
                         parserSkipSkipable(&parser);
-                        if (parserError(&parser) || !parserReadIdentificator(&parser, word1)) {
+                        if (parserError(&parser)) {
+                            fprintf(stderr, "%s %zu", BASIC_ERROR_MESSAGE, parser.readedBytes);
+                            exit_and_clean(ERROR_EXIT_CODE);
+                        } else if (!parserReadIdentificator(&parser, word1)) {
                             //todo memory error
                             fprintf(stderr, "%s %zu", BASIC_ERROR_MESSAGE, parser.readedBytes);
                             exit_and_clean(ERROR_EXIT_CODE);
@@ -109,9 +113,49 @@ int main() {
                             currentBase = phoneBasesAddBase(bases, vectorBegin(word1));
                         }
                     } else if (operator == PARSER_ELEMENT_TYPE_OPERATOR_DELETE) {
-                        //todo
+                        parserSkipSkipable(&parser);
+                        if (parserError(&parser)) {
+                            fprintf(stderr, "%s %zu", BASIC_ERROR_MESSAGE, parser.readedBytes);
+                            exit_and_clean(ERROR_EXIT_CODE);
+                        } else {
+                            nextType = parserNextType(&parser);
+
+                            if (nextType == PARSER_ELEMENT_TYPE_NUMBER) {
+                                if (currentBase == NULL) {
+                                    fprintf(stderr, "%s %zu", BASIC_ERROR_MESSAGE, parser.readedBytes);
+                                    exit_and_clean(ERROR_EXIT_CODE);
+                                }
+
+                                if (!parserReadNumber(&parser, word1) || parserError(&parser)) {
+                                    //todo memory error
+                                    fprintf(stderr, "%s %zu", BASIC_ERROR_MESSAGE, parser.readedBytes);
+                                    exit_and_clean(ERROR_EXIT_CODE);
+                                } else {
+                                    makeVectorCStringCompatible(word1);
+                                    phfwdRemove(currentBase, vectorBegin(word1));
+                                }
+                            } else if (nextType == PARSER_ELEMENT_TYPE_WORD) {
+                                if (!parserReadIdentificator(&parser, word1) || parserError(&parser)) {
+                                    //todo memory error
+                                    fprintf(stderr, "%s %zu", BASIC_ERROR_MESSAGE, parser.readedBytes);
+                                    exit_and_clean(ERROR_EXIT_CODE);
+                                } else {
+                                    makeVectorCStringCompatible(word1);
+                                    if (currentBase == phoneBasesGetBase(bases, vectorBegin(word1))) {
+                                        currentBase = NULL;
+                                    }
+                                    if (!phoneBasesDelBase(bases, vectorBegin(word1))) {
+                                        fprintf(stderr, "%s DEL %zu", BASIC_ERROR_MESSAGE, parser.readedBytes);
+                                        exit_and_clean(ERROR_EXIT_CODE);
+                                    }
+                                }
+                            }
+                        }
+
+
                     } else {
-                        fprintf(stderr, "%s %zu", BASIC_ERROR_MESSAGE, parser.readedBytes);
+                        //todo
+                        fprintf(stderr, "%s yyyy %zu", BASIC_ERROR_MESSAGE, parser.readedBytes);
                         exit_and_clean(ERROR_EXIT_CODE);
                     }
                 } else if (nextType == PARSER_ELEMENT_TYPE_SINGLE_CHARACTER_OPERATOR) {
@@ -119,12 +163,15 @@ int main() {
                     if (operator == PARSER_ELEMENT_TYPE_OPERATOR_QM) {
 
                         if (currentBase == NULL) {
-                            fprintf(stderr, "%s %zu", BASIC_ERROR_MESSAGE, parser.readedBytes);
+                            fprintf(stderr, "%s ? %zu", BASIC_ERROR_MESSAGE, parser.readedBytes);
                             exit_and_clean(ERROR_EXIT_CODE);
                         }
 
                         parserSkipSkipable(&parser);
-                        if (parserError(&parser) || !parserReadNumber(&parser, word1)) {
+                        if (parserError(&parser)) {
+                            fprintf(stderr, "%s %zu", BASIC_ERROR_MESSAGE, parser.readedBytes);
+                            exit_and_clean(ERROR_EXIT_CODE);
+                        } else if (!parserReadNumber(&parser, word1)) {
                             //todo memory error
                             fprintf(stderr, "%s %zu", BASIC_ERROR_MESSAGE, parser.readedBytes);
                             exit_and_clean(ERROR_EXIT_CODE);
@@ -144,6 +191,7 @@ int main() {
                                 for (i = 0; phnumGet(phoneNumbers, i) != NULL; ++i) {
                                     fprintf(stdout, "%s\n", phnumGet(phoneNumbers, i));
                                 }
+                                phnumDelete(phoneNumbers);
                             }
 
                         }
