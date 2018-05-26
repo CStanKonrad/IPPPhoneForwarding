@@ -36,6 +36,7 @@ typedef struct Parser* Parser;
 struct Parser {
     size_t readBytes;
     bool isError;
+    bool isCommentEofError;
 };
 
 struct Parser parserCreateNew();
@@ -56,5 +57,7 @@ bool parserReadIdentificator(Parser parser, Vector destination);
 bool parserReadNumber(Parser parser, Vector destination);
 
 size_t parserGetReadBytes(Parser parser);
+
+bool parserIsCommentEofError(Parser parser);
 
 #endif //TELEFONY_PARSER_H

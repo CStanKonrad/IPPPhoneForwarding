@@ -9,15 +9,17 @@
 #include <stdbool.h>
 #include <stdio.h>
 #include <stdlib.h>
+#include <string.h>
 
 #include "parser.h"
 #include "phone_bases_system.h"
 #include "vector.h"
 #include "input.h"
+#include "character.h"
 
 #define BASIC_ERROR_MESSAGE "ERROR"
 #define BASIC_ERROR_SUFFIX " "
-#define EOF_ERROR_SUFFIX " eof"
+#define EOF_ERROR_SUFFIX " EOF"
 #define MEMORY_ERROR_SUFFIX " not enough memory "
 #define DEL_OPERATOR_ERROR_SUFFIX " DEL "
 #define QM_OPERATOR_ERROR_SUFFIX " ? "
@@ -59,7 +61,7 @@ static void printErrorMessage(const char *suffix, size_t bytes) {
 }
 
 static void printEofError() {
-    fprintf(stderr, "%s%s%", BASIC_ERROR_MESSAGE, EOF_ERROR_SUFFIX);
+    fprintf(stderr, "%s%s", BASIC_ERROR_MESSAGE, EOF_ERROR_SUFFIX);
 }
 
 static void initProgram() {
@@ -98,6 +100,10 @@ static void loopStepClear() {
 }
 
 static void checkParserError() {
+    if (parserIsCommentEofError(&parser)) {
+        printEofError();
+        exit_and_clean(ERROR_EXIT_CODE);
+    }
     if (parserError(&parser)) {
         printErrorMessage(BASIC_ERROR_SUFFIX, parserGetReadBytes(&parser));
         exit_and_clean(ERROR_EXIT_CODE);
@@ -125,6 +131,15 @@ static void readOperationNew() {
     skipSkipable();
     checkEofError();
 
+    int nextType = parserNextType(&parser);
+    checkParserError();
+
+
+    if (nextType != PARSER_ELEMENT_TYPE_WORD) {
+        printErrorMessage(BASIC_ERROR_SUFFIX, parserGetReadBytes(&parser) + 1);
+        exit_and_clean(ERROR_EXIT_CODE);
+    }
+
     if (!parserReadIdentificator(&parser, word1)) {
         printErrorMessage(MEMORY_ERROR_SUFFIX, parserGetReadBytes(&parser));
         exit_and_clean(ERROR_EXIT_CODE);
@@ -148,6 +163,7 @@ static void readOperationNew() {
 }
 
 static void readOperationDeleteNumber() {
+    size_t operatorPos = parserGetReadBytes(&parser);
     if (!parserReadNumber(&parser, word1)) {
         printErrorMessage(MEMORY_ERROR_SUFFIX, parserGetReadBytes(&parser));
         exit_and_clean(ERROR_EXIT_CODE);
@@ -155,7 +171,7 @@ static void readOperationDeleteNumber() {
     checkParserError();
 
     if (currentBase == NULL) {
-        printErrorMessage(DEL_OPERATOR_ERROR_SUFFIX, parserGetReadBytes(&parser));
+        printErrorMessage(DEL_OPERATOR_ERROR_SUFFIX, operatorPos);
         exit_and_clean(ERROR_EXIT_CODE);
     }
 
@@ -164,6 +180,7 @@ static void readOperationDeleteNumber() {
 }
 
 static void readOperationDeleteBase() {
+    size_t operatorPos = parserGetReadBytes(&parser);
     if (!parserReadIdentificator(&parser, word1)) {
         printErrorMessage(MEMORY_ERROR_SUFFIX, parserGetReadBytes(&parser));
         exit_and_clean(ERROR_EXIT_CODE);
@@ -174,7 +191,7 @@ static void readOperationDeleteBase() {
     struct PhoneForward *toDel = phoneBasesGetBase(bases, vectorBegin(word1));
 
     if (toDel == NULL) {
-        printErrorMessage(DEL_OPERATOR_ERROR_SUFFIX, parserGetReadBytes(&parser));
+        printErrorMessage(DEL_OPERATOR_ERROR_SUFFIX, operatorPos);
         exit_and_clean(ERROR_EXIT_CODE);
     }
 
@@ -199,7 +216,7 @@ static void readOperationDelete() {
     } else if (nextType == PARSER_ELEMENT_TYPE_WORD) {
         readOperationDeleteBase();
     } else {
-        printErrorMessage(BASIC_ERROR_SUFFIX, parserGetReadBytes(&parser));
+        printErrorMessage(BASIC_ERROR_SUFFIX, parserGetReadBytes(&parser) + 1);
         exit_and_clean(ERROR_EXIT_CODE);
     }
 
@@ -213,6 +230,7 @@ static void printNumbers(const struct PhoneNumbers *numbers ) {
 }
 
 static void readOperationReverse() {
+    size_t operatorPos = parserGetReadBytes(&parser);
     skipSkipable();
     checkEofError();
 
@@ -229,7 +247,7 @@ static void readOperationReverse() {
 
 
         if (currentBase == NULL) {
-            printErrorMessage(QM_OPERATOR_ERROR_SUFFIX, parserGetReadBytes(&parser));
+            printErrorMessage(QM_OPERATOR_ERROR_SUFFIX, operatorPos);
             exit_and_clean(ERROR_EXIT_CODE);
         }
         makeVectorCStringCompatible(word1);
@@ -247,7 +265,7 @@ static void readOperationReverse() {
 
 
     } else {
-        printErrorMessage(BASIC_ERROR_SUFFIX, parserGetReadBytes(&parser));
+        printErrorMessage(BASIC_ERROR_SUFFIX, parserGetReadBytes(&parser) + 1);
         exit_and_clean(ERROR_EXIT_CODE);
     }
 
@@ -277,8 +295,16 @@ static void readOperatorGetFromWord1() {
 
 
 static void readOperatorRedirectWord1() {
+    size_t operatorPos = parserGetReadBytes(&parser);
     skipSkipable();
     checkEofError();
+
+    int nextType = parserNextType(&parser);
+
+    if (nextType != PARSER_ELEMENT_TYPE_NUMBER) {
+        printErrorMessage(BASIC_ERROR_SUFFIX, parserGetReadBytes(&parser) + 1);
+        exit_and_clean(ERROR_EXIT_CODE);
+    }
 
     if (!parserReadNumber(&parser, word2)) {
         printErrorMessage(MEMORY_ERROR_SUFFIX, parserGetReadBytes(&parser));
@@ -287,11 +313,17 @@ static void readOperatorRedirectWord1() {
     checkParserError();
 
     if (currentBase == NULL) {
-        printErrorMessage(REDIRECT_OPERATOR_ERROR_SUFFIX, parserGetReadBytes(&parser));
+        printErrorMessage(REDIRECT_OPERATOR_ERROR_SUFFIX, operatorPos);
         exit_and_clean(ERROR_EXIT_CODE);
     }
     makeVectorCStringCompatible(word1);
     makeVectorCStringCompatible(word2);
+
+    if (strcmp(vectorBegin(word1), vectorBegin(word2)) == 0) {
+        printErrorMessage(REDIRECT_OPERATOR_ERROR_SUFFIX, operatorPos);
+        exit_and_clean(ERROR_EXIT_CODE);
+    }
+
     if (!phfwdAdd(currentBase, vectorBegin(word1), vectorBegin(word2))) {
         printErrorMessage(MEMORY_ERROR_SUFFIX, parserGetReadBytes(&parser));
         exit_and_clean(ERROR_EXIT_CODE);
@@ -362,7 +394,7 @@ static void readOperation(int nextType) {
 
 
     } else {
-        printErrorMessage(BASIC_ERROR_SUFFIX, parserGetReadBytes(&parser));
+        printErrorMessage(BASIC_ERROR_SUFFIX, parserGetReadBytes(&parser) + 1);
         exit_and_clean(ERROR_EXIT_CODE);
     }
 }

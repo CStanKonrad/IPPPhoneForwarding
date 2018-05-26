@@ -12,6 +12,7 @@ struct Parser parserCreateNew() {
     struct Parser result;
     result.readBytes = 0;
     result.isError = false;
+    result.isCommentEofError = false;
     return result;
 }
 
@@ -57,6 +58,7 @@ static bool parserSkipComments(Parser parser) {
                 parser->readBytes--;
             }
             parser->isError = true;
+            parser->isCommentEofError = true;
             return false;
         } else if (r == PARSER_COMMENT_SEQUENCE[0]
                 && inputPeekCharacter() == PARSER_COMMENT_SEQUENCE[1]) {
@@ -137,6 +139,7 @@ int parserReadOperator(Parser parser) {
             parser->isError = true;
             return PARSER_FAIL;
         }
+        size_t startPos = parser->readBytes;
 
         const char *ptr;
         for (ptr = toCmp; *ptr != '\0'; ptr++) {
@@ -144,6 +147,7 @@ int parserReadOperator(Parser parser) {
             parser->readBytes++;
             if (ch != *ptr) {
                 parser->isError = true;
+                parser->readBytes = startPos;
                 return PARSER_FAIL;
             }
         }
@@ -151,6 +155,7 @@ int parserReadOperator(Parser parser) {
         if (!parserCharacterCanBeSkipped(inputPeekCharacter())
                 && !(inputPeekCharacter() == PARSER_COMMENT_SEQUENCE[0])) {
             parser->isError = true;
+            parser->readBytes = startPos;
             return PARSER_FAIL;
         }
 
@@ -195,6 +200,10 @@ bool parserReadNumber(Parser parser, Vector destination) {
 
 size_t parserGetReadBytes(Parser parser) {
     return parser->readBytes;
+}
+
+bool parserIsCommentEofError(Parser parser) {
+    return parser->isCommentEofError;
 }
 
 
