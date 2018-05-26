@@ -106,9 +106,12 @@ cmd="\"$PROGRAM_PATH\" < $TMP_NEW_INPUT > $TMP_NEW_OUTPUT"
 eval "$cmd"
 
 paste $TMP_NEW_OUTPUT $TMP_RAW_OUTPUT > $TMP_CONCAT
-sed -i -e "s/	/.	/g" $TMP_CONCAT
 
+pattern="E"
+sed -i -e "s/	/$pattern	/g" $TMP_CONCAT
 
-grep -w -e "$NUMBER." $TMP_CONCAT > $TMP_NEW_OUTPUT
-sed -i -e "s/$NUMBER.	//g" $TMP_NEW_OUTPUT
+pattern="$NUMBER$pattern"
+
+grep -w "$pattern" $TMP_CONCAT > $TMP_NEW_OUTPUT
+sed -i -e "s/$pattern	//g" $TMP_NEW_OUTPUT
 cat $TMP_NEW_OUTPUT
