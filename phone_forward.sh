@@ -23,6 +23,8 @@ function finishScript {
 	exit 0
 }
 
+#Zwraca "true" jeżeli jest jeden parametr reprezentujący numer.
+#W przeciwnym wypadku zwraca false.
 function isNumber {
 	
 	if [ "$#" != '1' ]
@@ -38,6 +40,23 @@ function isNumber {
 			echo 'false'
 		fi
 	fi
+}
+
+function checkExitCode {
+	exitCode=$?
+	if [ "$exitCode" != "0" ]
+	then
+		errorFinishScript  "\nBłąd: program zakończony kodem $exitCode"
+	fi
+}
+
+#Pomija $2 lini w pliku $1, wykorzustując plik $3 jako bufor
+function ignoreLines {
+	file=$1
+	lines=$(($2 + 1))
+	buffer=$3
+	tail -n +$lines $file > $buffer
+	cat $buffer > $file
 }
 
 if [ "$#" != "3" ]
@@ -62,38 +81,52 @@ TMP_INPUT=$(mktemp XXXXXXXXXXX.tmp.in) \
 || errorFinishScript "$TMP_ERROR_MESSAGE"
 tmpFiles=( $TMP_INPUT )
 
-TMP_RAW_OUTPUT=$(mktemp XXXXXXXXXXX.tmp.proc) \
-|| errorFinishScript "$TMP_ERROR_MESSAGE" ${tmpFiles[@]}
-tmpFiles+=( $TMP_RAW_OUTPUT )
-
-TMP_NEW_INPUT=$(mktemp XXXXXXXXXXX.tmp.in) \
-|| errorFinishScript "$TMP_ERROR_MESSAGE" ${tmpFiles[@]}
-tmpFiles+=( $TMP_NEW_INPUT )
-
-TMP_NEW_OUTPUT=$(mktemp XXXXXXXXXXX.tmp.out) \
-|| errorFinishScript "$TMP_ERROR_MESSAGE" ${tmpFiles[@]}
-tmpFiles+=( $TMP_NEW_OUTPUT )
-
-TMP_CONCAT=$(mktemp XXXXXXXXXXX.tmp.out) \
-|| errorFinishScript "$TMP_ERROR_MESSAGE" ${tmpFiles[@]}
-tmpFiles+=( $TMP_CONCAT )
-
-
 function clean {
 	finishScript ${tmpFiles[@]}
 }
 
 trap clean EXIT
 
+TMP_RAW_OUTPUT=$(mktemp XXXXXXXXXXX.tmp.proc) \
+|| errorFinishScript "$TMP_ERROR_MESSAGE"
+tmpFiles+=( $TMP_RAW_OUTPUT )
+
+TMP_NEW_INPUT=$(mktemp XXXXXXXXXXX.tmp.in) \
+|| errorFinishScript "$TMP_ERROR_MESSAGE"
+tmpFiles+=( $TMP_NEW_INPUT )
+
+TMP_NEW_OUTPUT=$(mktemp XXXXXXXXXXX.tmp.out) \
+|| errorFinishScript "$TMP_ERROR_MESSAGE"
+tmpFiles+=( $TMP_NEW_OUTPUT )
+
+TMP_CONCAT=$(mktemp XXXXXXXXXXX.tmp.out) \
+|| errorFinishScript "$TMP_ERROR_MESSAGE"
+tmpFiles+=( $TMP_CONCAT )
+
+TMP_TAIL=$(mktemp XXXXXXXXXXX.tmp.buf) \
+|| errorFinishScript "$TMP_ERROR_MESSAGE"
+tmpFiles+=( $TMP_TAIL )
+
+
+
+
 echo "NEW BASE " > $TMP_INPUT
 cat "$FILE" >> $TMP_INPUT
+
+cmd="\"$PROGRAM_PATH\" < $TMP_INPUT > $TMP_RAW_OUTPUT"
+eval "$cmd"
+checkExitCode
+
+LINES_TO_IGNORE=$(wc -l < $TMP_RAW_OUTPUT)
 echo "? $NUMBER" >> $TMP_INPUT
 
 
-
 cmd="\"$PROGRAM_PATH\" < $TMP_INPUT > $TMP_RAW_OUTPUT"
-
 eval "$cmd"
+checkExitCode
+
+ignoreLines $TMP_RAW_OUTPUT $LINES_TO_IGNORE $TMP_TAIL
+
 
 echo "NEW BASE " > $TMP_NEW_INPUT
 cat "$FILE" >> $TMP_NEW_INPUT
@@ -104,6 +137,9 @@ sed -i -e 's/?/ ?\n/g' $TMP_NEW_INPUT
 
 cmd="\"$PROGRAM_PATH\" < $TMP_NEW_INPUT > $TMP_NEW_OUTPUT"
 eval "$cmd"
+checkExitCode
+
+ignoreLines $TMP_NEW_OUTPUT $LINES_TO_IGNORE $TMP_TAIL
 
 paste $TMP_NEW_OUTPUT $TMP_RAW_OUTPUT > $TMP_CONCAT
 
