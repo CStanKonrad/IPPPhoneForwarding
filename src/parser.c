@@ -1,6 +1,10 @@
-//
-// Created by skonrad on 25/05/18.
-//
+/** @file
+ * Funkcje do parsowania wejścia.
+ *
+ * @author Konrad Staniszewski
+ * @copyright Konrad Staniszewski
+ * @date 25.05.2018
+ */
 
 #include <assert.h>
 #include <stdint.h>
@@ -16,12 +20,23 @@ struct Parser parserCreateNew() {
     return result;
 }
 
-
+/**
+ * @param[in] characterCode - kod znaku
+ * @return Niezerowa wartoś jeżeli @p characterCode
+ *         reprezentuje znak biały lub znak nowej lini.
+ */
 static int parserCharacterCanBeSkipped(int characterCode) {
     return characterIsWhite(characterCode)
             || characterIsNewLine(characterCode);
 }
 
+/**
+ * @brief Pomija symbole spełniające predykat @p parserCharacterCanBeSkipped.
+ * @see parserCharacterCanBeSkipped
+ * @param[in, out] parser - wskaźnik na strukturę reprezentującą stan parsowania.
+ *       Po wykonaniu @p parser zostaje uaktualniony.
+ * @return true jeżeli coś zostało pominięte false w przeciwnym przypadku.
+ */
 static bool parserSkipCharactersThatCanBeSkipped(Parser parser) {
     if (parserFinished(parser)) {
         return false;
@@ -32,6 +47,12 @@ static bool parserSkipCharactersThatCanBeSkipped(Parser parser) {
     return skipped != 0;
 }
 
+/**
+ * @brief Pomija komentarze.
+ * @param[in, out] parser - wskaźnik na strukturę reprezentującą stan parsowania.
+ *       Po wykonaniu @p parser zostaje uaktualniony.
+ * @return true jeżeli coś zostało pominięte false w przeciwnym przypadku.
+ */
 static bool parserSkipComments(Parser parser) {
     if (parserFinished(parser)
             || inputPeekCharacter() != PARSER_COMMENT_SEQUENCE[0]) {
@@ -83,6 +104,12 @@ bool parserFinished(Parser parser) {
     return parserError(parser) || inputIsEOF();
 }
 
+/**
+ * @param[in] characterCode - kod znaku.
+ * @return true jeżeli jest operatorem składającym się z jednego
+ *         symbolu,
+ *         false w przeciwnym wypadku.
+ */
 static int parserIsSingleCharacterOperator(int characterCode) {
     return characterCode == PARSER_OPERATOR_QM
            || characterCode == PARSER_OPERATOR_REDIRECT;
@@ -165,6 +192,11 @@ int parserReadOperator(Parser parser) {
     }
 }
 
+/**
+ * @param[in] characterCode - kod znaku
+ * @return Niezerowa wartość jeżeli @p characterCode jest literą
+ *         lub cyfrą.
+ */
 static int parserIsLetterOrDigit(int characterCode) {
     return characterIsLetter(characterCode) || characterIsDigit(characterCode);
 }

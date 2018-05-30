@@ -12,10 +12,21 @@
 #include "phone_bases_system.h"
 #include "text.h"
 
-
+/**
+ * @see phoneBasesHashId
+ */
 const size_t PHONE_BASES_HASH_BASE = 127;
+
+/**
+ * @see phoneBasesHashId
+ */
 const size_t PHONE_BASES_HASH_MOD = 1000000009;
 
+/**
+ * @brief Przyporządkowuje identyfikatorowi @p id numer.
+ * @param[in] id - ciąg znaków w stylu c.
+ * @return Wartość funkcji mieszającej dla @p id.
+ */
 static size_t phoneBasesHashId(const char *id) {
     size_t result = 0;
     const char *ptr = id;
@@ -29,18 +40,34 @@ static size_t phoneBasesHashId(const char *id) {
     return result;
 }
 
+/**
+ * @brief Sprawdza czy pbi odpowiada bazie o identyfikatorze @p id.
+ * @param[in] pbi - wskaźnik na strukturę przechowującą informacje
+ *       o bazie przekierowań numerów.
+ * @param[in] id - identyfikator (ciąg numerów w stylu c).
+ * @param[in] hash - wartość @p phoneBasesHashId dla @p id.
+ * @return Niezerowa wartość jeżeli @p pbi opisuje bazę
+ *         o identyfikatorze @p id.
+ */
 static int phoneBasesInfoEqualId(PhoneBaseInfo pbi, const char *id, size_t hash) {
     return pbi.hash == hash && strcmp(pbi.id, id) == 0;
 }
 
-
+/**
+ * @brief Usuwa węzeł @p pbn
+ * @param[in] pbn - wskaźnik na usuwany węzeł.
+ */
 static void phoneBasesFreeNode(PhoneBasesNode pbn) {
     free((void*)pbn->baseInfo.id);
     phfwdDelete(pbn->baseInfo.base);
     free(pbn);
 }
 
-void phoneBasesInitPhoneBases(PhoneBases pb) {
+/**
+ * @brief Inicjuje strukturę przechowującą bazy przekierowań.
+ * @param[in, out] pb - wskaźnik na strukturę przechowującą bazy przekierowań.
+ */
+static void phoneBasesInitPhoneBases(PhoneBases pb) {
     pb->basesList = NULL;
     pb->numberOfBases = 0;
 }
@@ -56,6 +83,10 @@ PhoneBases phoneBasesCreateNewPhoneBases() {
     return pb;
 }
 
+/**
+ * @brief Usuwa wszystkie węzły występujące za @p node.
+ * @param[in] node - wskaźnik na strukturę reprezentującą węzeł.
+ */
 static void phoneBasesDeleteNodesList(PhoneBasesNode node) {
     if (node != NULL) {
         phoneBasesDeleteNodesList(node->next);

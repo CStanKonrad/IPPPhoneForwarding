@@ -17,29 +17,86 @@
 #include "input.h"
 #include "character.h"
 
+/**
+ * @brief Bazowy prefiks informacji o błędzie.
+ */
 #define BASIC_ERROR_MESSAGE "ERROR"
-#define BASIC_ERROR_SUFFIX " "
+
+/**
+ * @brief Domyślny infiks informacji o błędzie.
+ */
+#define BASIC_ERROR_INFIX " "
+
+/**
+ * @brief Sufiks informacji o błędzie end of file.
+ */
 #define EOF_ERROR_SUFFIX " EOF"
-#define MEMORY_ERROR_SUFFIX " not enough memory "
-#define DEL_OPERATOR_ERROR_SUFFIX " DEL "
-#define QM_OPERATOR_ERROR_SUFFIX " ? "
+
+/**
+ * @brief Infiks informacji o błędzie związanym z pamięcią.
+ */
+#define MEMORY_ERROR_INFIX " not enough memory "
+
+/**
+ * @brief Infiks informacji o błędzie operatora DEL.
+ */
+#define DEL_OPERATOR_ERROR_INFIX " DEL "
+
+/**
+ * @brief Infiks informacji o błędzie operatora ?.
+ */
+#define QM_OPERATOR_ERROR_INFIX " ? "
+
+/**
+ * @brief Infiks informacji o błędzie operatora >.
+ */
 #define REDIRECT_OPERATOR_ERROR_SUFFIX " > "
 
 
+/**
+ * @brief Kod błędu zwracany przez program.
+ */
 #define ERROR_EXIT_CODE 1
+
+/**
+ * @brief Kod zwracany przez program w przypadku braku błędów.
+ */
 #define SUCCESS_EXIT_CODE 0
 
 //todo 2?
 #define OPERATOR_POSITION_OFFSET 2
 
+/**
+ * @brief Wskaźnik na strukturę przechowującą bazy przekierowań.
+ */
+static PhoneBases bases = NULL;
 
-static PhoneBases  bases = NULL;
-static Vector word1 = NULL, word2 = NULL;
+/**
+ * @brief Wskaźniki na wektor pomocniczy do buforowania wejścia.
+ */
+static Vector word1 = NULL;
+
+/**
+ * @brief Wskaźniki na wektor pmocniczy do buforowania wejścia.
+ */
+static Vector word2 = NULL;
+
+/**
+ * @brief Wskaźnik na aktualnie aktywną bazę przekierowań.
+ * NULL w przypadku braku.
+ */
 static struct PhoneForward *currentBase = NULL;
-static const struct PhoneNumbers *phoneNumbers = NULL;
+
+/**
+ * @brief Struktura opisująca stan parsowania.
+ */
 static struct Parser parser;
 
-
+/**
+ * @brief Kończy program.
+ * Zwalnia pamięć i kończy program kodem @p exit_code.
+ * @param[in] exit_code - kod zakończenia programu.
+ */
 static void exit_and_clean(int exit_code) {
 
     if (bases != NULL) {
@@ -58,78 +115,132 @@ static void exit_and_clean(int exit_code) {
     exit(exit_code);
 }
 
-static void printErrorMessage(const char *suffix, size_t bytes) {
-    fprintf(stderr, "%s%s%zu", BASIC_ERROR_MESSAGE, suffix,
+/**
+ * @brief Wypisuje informację o błędzie.
+ * @param[in] infix - infiks informacji
+ * @param[in] bytes - liczba wczytanych bajtów.
+ */
+static void printErrorMessage(const char *infix, size_t bytes) {
+    fprintf(stderr, "%s%s%zu", BASIC_ERROR_MESSAGE, infix,
             bytes);
 }
 
+/**
+ * @brief Wypisuje informacje o błędzie związanym z nieoczekiwanym końcem pliku.
+ */
 static void printEofError() {
     fprintf(stderr, "%s%s", BASIC_ERROR_MESSAGE, EOF_ERROR_SUFFIX);
 }
 
+/**
+ * @brief Inicjuje program.
+ * Inicjuje struktury:
+ * @ref parser
+ * @ref bases
+ * @ref word1
+ * @ref word2
+ * w przypadku problemów z pamięcią kończy program
+ * i wypisuje informacje o błędzie.
+ */
 static void initProgram() {
     parser = parserCreateNew();
     bases = phoneBasesCreateNewPhoneBases();
     if (bases == NULL) {
-        printErrorMessage(MEMORY_ERROR_SUFFIX, parserGetReadBytes(&parser));
+        printErrorMessage(MEMORY_ERROR_INFIX, parserGetReadBytes(&parser));
         exit_and_clean(ERROR_EXIT_CODE);
     }
 
     word1 = vectorCreate();
 
     if (word1 == NULL) {
-        printErrorMessage(MEMORY_ERROR_SUFFIX, parserGetReadBytes(&parser));
+        printErrorMessage(MEMORY_ERROR_INFIX, parserGetReadBytes(&parser));
         exit_and_clean(ERROR_EXIT_CODE);
     }
 
     word2 = vectorCreate();
 
     if (word2 == NULL) {
-        printErrorMessage(MEMORY_ERROR_SUFFIX, parserGetReadBytes(&parser));
+        printErrorMessage(MEMORY_ERROR_INFIX, parserGetReadBytes(&parser));
         exit_and_clean(ERROR_EXIT_CODE);
     }
 }
 
+/**
+ * @brief Dodaje do Vectora '\0' na koniec.
+ * W przypadku problemów z pamięcią kończy program
+ * i wypisuje informacje o błędzie.
+ * @param[in] v - dany Vectora.
+ */
 static void makeVectorCStringCompatible(Vector v) {
     if (!vectorPushBack(v, '\0')) {
-        printErrorMessage(MEMORY_ERROR_SUFFIX, parserGetReadBytes(&parser));
+        printErrorMessage(MEMORY_ERROR_INFIX, parserGetReadBytes(&parser));
         exit_and_clean(ERROR_EXIT_CODE);
     }
 }
 
+/**
+ * @brief Czyści Vectory @p word1 @p word2.
+ */
 static void loopStepClear() {
     vectorSoftClear(word1);
     vectorSoftClear(word2);
 }
 
+/**
+ * @brief Sprawdza czy wystąpił błąd parsowania.
+ * Jeżeli wystąpił to wypisuje odpowiednią informację
+ * i kończy program.
+ */
 static void checkParserError() {
     if (parserIsCommentEofError(&parser)) {
         printEofError();
         exit_and_clean(ERROR_EXIT_CODE);
     }
     if (parserError(&parser)) {
-        printErrorMessage(BASIC_ERROR_SUFFIX, parserGetReadBytes(&parser));
+        printErrorMessage(BASIC_ERROR_INFIX, parserGetReadBytes(&parser));
         exit_and_clean(ERROR_EXIT_CODE);
     }
 }
 
+
+/**
+ * @brief Sprawdza czy wystąpił błąd parsowania typu EOF.
+ * Jeżeli wystąpił to wypisuje odpowiednią informację
+ * i kończy program.
+ */
 static void checkEofError() {
     if (inputIsEOF()) {
         printEofError();
         exit_and_clean(ERROR_EXIT_CODE);
     }
 }
+
+/**
+ * @brief Sprawdza czy parsowanie się zakończyło.
+ * Jeżeli tak to kończy program.
+ */
 static void checkParserFinished() {
     if (parserFinished(&parser)) {
         exit_and_clean(SUCCESS_EXIT_CODE);
     }
 }
 
+/**
+ * @brief Pomija zbędne znaki.
+ * Wywołuje @ref parserSkipSkipable,
+ * oraz @ref checkParserError.
+ */
 static void skipSkipable() {
     parserSkipSkipable(&parser);
     checkParserError();
 }
 
+/**
+ * @brief Obsługuje operację dodania nowej bazy.
+ * Zakłada, że poprzednio wczytaną operacją jest PARSER_OPERATOR_NEW.
+ * W przypadku problemów wypisuje odpowiedni komunikat
+ * i kończy program.
+ */
 static void readOperationNew() {
     skipSkipable();
     checkEofError();
@@ -139,12 +250,12 @@ static void readOperationNew() {
 
 
     if (nextType != PARSER_ELEMENT_TYPE_WORD) {
-        printErrorMessage(BASIC_ERROR_SUFFIX, parserGetReadBytes(&parser) + 1);
+        printErrorMessage(BASIC_ERROR_INFIX, parserGetReadBytes(&parser) + 1);
         exit_and_clean(ERROR_EXIT_CODE);
     }
 
     if (!parserReadIdentificator(&parser, word1)) {
-        printErrorMessage(MEMORY_ERROR_SUFFIX, parserGetReadBytes(&parser));
+        printErrorMessage(MEMORY_ERROR_INFIX, parserGetReadBytes(&parser));
         exit_and_clean(ERROR_EXIT_CODE);
     }
     checkParserError();
@@ -153,33 +264,41 @@ static void readOperationNew() {
 
     if (strcmp(vectorBegin(word1), PARSER_OPERATOR_DELETE) == 0
         || strcmp(vectorBegin(word1), PARSER_OPERATOR_NEW) == 0) {
-        printErrorMessage(BASIC_ERROR_SUFFIX, parserGetReadBytes(&parser) - OPERATOR_POSITION_OFFSET);
+        printErrorMessage(BASIC_ERROR_INFIX, parserGetReadBytes(&parser) - OPERATOR_POSITION_OFFSET);
         exit_and_clean(ERROR_EXIT_CODE);
     }
 
     if (vectorSize(word1) <= 1) {
-        printErrorMessage(BASIC_ERROR_SUFFIX, parserGetReadBytes(&parser));
+        printErrorMessage(BASIC_ERROR_INFIX, parserGetReadBytes(&parser));
         exit_and_clean(ERROR_EXIT_CODE);
     }
 
     currentBase = phoneBasesAddBase(bases, vectorBegin(word1));
 
     if (currentBase == NULL) {
-        printErrorMessage(MEMORY_ERROR_SUFFIX, parserGetReadBytes(&parser));
+        printErrorMessage(MEMORY_ERROR_INFIX, parserGetReadBytes(&parser));
         exit_and_clean(ERROR_EXIT_CODE);
     }
 
 }
 
+/**
+ * @brief Obsługuje operację phfwdRemove(numer).
+ * Oczekuje, że poprzednio wczytano operator PARSER_OPERATOR_DELETE
+ * oraz że na wczytanie według @p parserNextType oczekuje numer.
+ * @param[in] operatorPos - pozycja operatora usunięcia.
+ * W przypadku problemów wypisuje odpowiedni komunikat
+ * i kończy program.
+ */
 static void readOperationDeleteNumber(size_t operatorPos) {
     if (!parserReadNumber(&parser, word1)) {
-        printErrorMessage(MEMORY_ERROR_SUFFIX, parserGetReadBytes(&parser));
+        printErrorMessage(MEMORY_ERROR_INFIX, parserGetReadBytes(&parser));
         exit_and_clean(ERROR_EXIT_CODE);
     }
     checkParserError();
 
     if (currentBase == NULL) {
-        printErrorMessage(DEL_OPERATOR_ERROR_SUFFIX, operatorPos);
+        printErrorMessage(DEL_OPERATOR_ERROR_INFIX, operatorPos);
         exit_and_clean(ERROR_EXIT_CODE);
     }
 
@@ -187,9 +306,17 @@ static void readOperationDeleteNumber(size_t operatorPos) {
     phfwdRemove(currentBase, vectorBegin(word1));
 }
 
+/**
+ * @brief Obsługuje operację usunięcia bazy przekierowań.
+ * Oczekuje, że poprzednio wczytano operator PARSER_OPERATOR_DELETE
+ * oraz że na wczytanie według @p parserNextType oczekuje identyfikator.
+ * @param[in] operatorPos - pozycja (nr bajtu) operatora usunięcia.
+ * W przypadku problemów wypisuje odpowiedni komunikat
+ * i kończy program.
+ */
 static void readOperationDeleteBase(size_t operatorPos) {
     if (!parserReadIdentificator(&parser, word1)) {
-        printErrorMessage(MEMORY_ERROR_SUFFIX, parserGetReadBytes(&parser));
+        printErrorMessage(MEMORY_ERROR_INFIX, parserGetReadBytes(&parser));
         exit_and_clean(ERROR_EXIT_CODE);
     }
     checkParserError();
@@ -197,15 +324,15 @@ static void readOperationDeleteBase(size_t operatorPos) {
     makeVectorCStringCompatible(word1);
 
     if (strcmp(vectorBegin(word1), PARSER_OPERATOR_DELETE) == 0
-            || strcmp(vectorBegin(word1), PARSER_OPERATOR_NEW) == 0) {
-        printErrorMessage(BASIC_ERROR_SUFFIX, parserGetReadBytes(&parser) - OPERATOR_POSITION_OFFSET);
+        || strcmp(vectorBegin(word1), PARSER_OPERATOR_NEW) == 0) {
+        printErrorMessage(BASIC_ERROR_INFIX, parserGetReadBytes(&parser) - OPERATOR_POSITION_OFFSET);
         exit_and_clean(ERROR_EXIT_CODE);
     }
 
     struct PhoneForward *toDel = phoneBasesGetBase(bases, vectorBegin(word1));
 
     if (toDel == NULL) {
-        printErrorMessage(DEL_OPERATOR_ERROR_SUFFIX, operatorPos);
+        printErrorMessage(DEL_OPERATOR_ERROR_INFIX, operatorPos);
         exit_and_clean(ERROR_EXIT_CODE);
     }
 
@@ -217,7 +344,10 @@ static void readOperationDeleteBase(size_t operatorPos) {
 
 }
 
-
+/**
+ * @brief Obsługuje operację zadaną przez operator PARSER_OPERATOR_DELETE.
+ * Oczekuje, że poprzednio wczytano operator PARSER_OPERATOR_DELETE.
+ */
 static void readOperationDelete() {
     size_t operatorPos = parserGetReadBytes(&parser) - strlen(PARSER_OPERATOR_DELETE) + 1;
     skipSkipable();
@@ -231,19 +361,27 @@ static void readOperationDelete() {
     } else if (nextType == PARSER_ELEMENT_TYPE_WORD) {
         readOperationDeleteBase(operatorPos);
     } else {
-        printErrorMessage(BASIC_ERROR_SUFFIX, parserGetReadBytes(&parser) + 1);
+        printErrorMessage(BASIC_ERROR_INFIX, parserGetReadBytes(&parser) + 1);
         exit_and_clean(ERROR_EXIT_CODE);
     }
 
 }
 
-static void printNumbers(const struct PhoneNumbers *numbers ) {
+/**
+ * @brief Wypisuje numery.
+ * @param[in] numbers - struktura przechowująca numery do wypisania.
+ */
+static void printNumbers(const struct PhoneNumbers *numbers) {
     size_t i;
     for (i = 0; phnumGet(numbers, i) != NULL; i++) {
         fprintf(stdout, "%s\n", phnumGet(numbers, i));
     }
 }
 
+/**
+ * @brief Obsługuje operację phwfdReverse.
+ * Oczekuje, że poprzednio wczytano PARSER_OPERATOR_QM.
+ */
 static void readOperationReverse() {
     size_t operatorPos = parserGetReadBytes(&parser);
     skipSkipable();
@@ -254,22 +392,21 @@ static void readOperationReverse() {
 
     if (nextType == PARSER_ELEMENT_TYPE_NUMBER) {
         if (!parserReadNumber(&parser, word1)) {
-            printErrorMessage(MEMORY_ERROR_SUFFIX, parserGetReadBytes(&parser));
+            printErrorMessage(MEMORY_ERROR_INFIX, parserGetReadBytes(&parser));
             exit_and_clean(ERROR_EXIT_CODE);
         }
         checkParserError();
 
 
-
         if (currentBase == NULL) {
-            printErrorMessage(QM_OPERATOR_ERROR_SUFFIX, operatorPos);
+            printErrorMessage(QM_OPERATOR_ERROR_INFIX, operatorPos);
             exit_and_clean(ERROR_EXIT_CODE);
         }
         makeVectorCStringCompatible(word1);
         const struct PhoneNumbers *numbers = phfwdReverse(currentBase, vectorBegin(word1));
 
         if (numbers == NULL) {
-            printErrorMessage(MEMORY_ERROR_SUFFIX, parserGetReadBytes(&parser));
+            printErrorMessage(MEMORY_ERROR_INFIX, parserGetReadBytes(&parser));
             exit_and_clean(ERROR_EXIT_CODE);
         }
 
@@ -278,27 +415,29 @@ static void readOperationReverse() {
         phnumDelete(numbers);
 
 
-
     } else {
-        printErrorMessage(BASIC_ERROR_SUFFIX, parserGetReadBytes(&parser) + 1);
+        printErrorMessage(BASIC_ERROR_INFIX, parserGetReadBytes(&parser) + 1);
         exit_and_clean(ERROR_EXIT_CODE);
     }
 
 }
 
 
+/**
+ * @brief Obsługuje operację phfwdGet(word1).
+ */
 static void readOperatorGetFromWord1() {
     makeVectorCStringCompatible(word1);
 
     if (currentBase == NULL) {
-        printErrorMessage(QM_OPERATOR_ERROR_SUFFIX, parserGetReadBytes(&parser));
+        printErrorMessage(QM_OPERATOR_ERROR_INFIX, parserGetReadBytes(&parser));
         exit_and_clean(ERROR_EXIT_CODE);
     }
 
     const struct PhoneNumbers *numbers = phfwdGet(currentBase, vectorBegin(word1));
 
     if (numbers == NULL) {
-        printErrorMessage(MEMORY_ERROR_SUFFIX, parserGetReadBytes(&parser));
+        printErrorMessage(MEMORY_ERROR_INFIX, parserGetReadBytes(&parser));
         exit_and_clean(ERROR_EXIT_CODE);
     }
 
@@ -308,7 +447,9 @@ static void readOperatorGetFromWord1() {
 
 }
 
-
+/**
+ * @brief Obsługuje operację przekierowania numerów.
+ */
 static void readOperatorRedirectWord1() {
     size_t operatorPos = parserGetReadBytes(&parser);
     skipSkipable();
@@ -318,12 +459,12 @@ static void readOperatorRedirectWord1() {
     checkParserError();
 
     if (nextType != PARSER_ELEMENT_TYPE_NUMBER) {
-        printErrorMessage(BASIC_ERROR_SUFFIX, parserGetReadBytes(&parser) + 1);
+        printErrorMessage(BASIC_ERROR_INFIX, parserGetReadBytes(&parser) + 1);
         exit_and_clean(ERROR_EXIT_CODE);
     }
 
     if (!parserReadNumber(&parser, word2)) {
-        printErrorMessage(MEMORY_ERROR_SUFFIX, parserGetReadBytes(&parser));
+        printErrorMessage(MEMORY_ERROR_INFIX, parserGetReadBytes(&parser));
         exit_and_clean(ERROR_EXIT_CODE);
     }
     checkParserError();
@@ -341,11 +482,15 @@ static void readOperatorRedirectWord1() {
     }
 
     if (!phfwdAdd(currentBase, vectorBegin(word1), vectorBegin(word2))) {
-        printErrorMessage(MEMORY_ERROR_SUFFIX, parserGetReadBytes(&parser));
+        printErrorMessage(MEMORY_ERROR_INFIX, parserGetReadBytes(&parser));
         exit_and_clean(ERROR_EXIT_CODE);
     }
 }
 
+/**
+ * @brief Wczytuje operację / jej fragment i obsługuje ją.
+ * @param[in] nextType - oczekiwany typ wczytanych danych.
+ */
 static void readOperation(int nextType) {
     if (nextType == PARSER_ELEMENT_TYPE_WORD) {
         int operator = parserReadOperator(&parser);
@@ -358,7 +503,7 @@ static void readOperation(int nextType) {
         } else if (operator == PARSER_ELEMENT_TYPE_OPERATOR_DELETE) {
             readOperationDelete();
         } else {
-            printErrorMessage(BASIC_ERROR_SUFFIX, parserGetReadBytes(&parser));
+            printErrorMessage(BASIC_ERROR_INFIX, parserGetReadBytes(&parser));
             exit_and_clean(ERROR_EXIT_CODE);
         }
 
@@ -370,13 +515,13 @@ static void readOperation(int nextType) {
         if (operator == PARSER_ELEMENT_TYPE_OPERATOR_QM) {
             readOperationReverse();
         } else {
-            printErrorMessage(BASIC_ERROR_SUFFIX, parserGetReadBytes(&parser));
+            printErrorMessage(BASIC_ERROR_INFIX, parserGetReadBytes(&parser));
             exit_and_clean(ERROR_EXIT_CODE);
         }
 
     } else if (nextType == PARSER_ELEMENT_TYPE_NUMBER) {
         if (!parserReadNumber(&parser, word1)) {
-            printErrorMessage(MEMORY_ERROR_SUFFIX, parserGetReadBytes(&parser));
+            printErrorMessage(MEMORY_ERROR_INFIX, parserGetReadBytes(&parser));
             exit_and_clean(ERROR_EXIT_CODE);
         }
         checkParserError();
@@ -398,24 +543,27 @@ static void readOperation(int nextType) {
                 readOperatorRedirectWord1();
                 //todo
             } else {
-                printErrorMessage(BASIC_ERROR_SUFFIX, parserGetReadBytes(&parser) + 1);
+                printErrorMessage(BASIC_ERROR_INFIX, parserGetReadBytes(&parser) + 1);
                 exit_and_clean(ERROR_EXIT_CODE);
             }
 
 
         } else {
-            printErrorMessage(BASIC_ERROR_SUFFIX, parserGetReadBytes(&parser) + 1);
+            printErrorMessage(BASIC_ERROR_INFIX, parserGetReadBytes(&parser) + 1);
             exit_and_clean(ERROR_EXIT_CODE);
         }
 
 
     } else {
-        printErrorMessage(BASIC_ERROR_SUFFIX, parserGetReadBytes(&parser) + 1);
+        printErrorMessage(BASIC_ERROR_INFIX, parserGetReadBytes(&parser) + 1);
         exit_and_clean(ERROR_EXIT_CODE);
     }
 }
 
-
+/**
+ * @brief Główna pętla programu.
+ * @return
+ */
 int main() {
     initProgram();
     //freopen("in.txt","r",stdin);
@@ -434,140 +582,3 @@ int main() {
     }
 
 }
-
-/*
-int main() {
-
-    initProgram();
-    struct Parser parser = parserCreateNew();
-    //system("pwd");
-    freopen("in.txt","r",stdin);
-    while (true) {
-        vectorSoftClear(word1);
-        vectorSoftClear(word2);
-        parserSkipSkipable(&parser);
-        if (parserError(&parser)) {
-            //fprintf(stderr, "%lld\n", parser.readBytes);
-            fprintf(stderr, "%s %s", BASIC_ERROR_MESSAGE, EOF_ERROR_SUFFIX);
-            return ERROR_EXIT_CODE;
-        } else if (parserFinished(&parser)) {
-            exit_and_clean(SUCCESS_EXIT_CODE);
-        } else {
-            int nextType = parserNextType(&parser);
-            if (parserError(&parser)) {
-                fprintf(stderr, "%s %zu", BASIC_ERROR_MESSAGE, parser.readBytes);
-                exit_and_clean(ERROR_EXIT_CODE);
-            } else {
-                if (nextType == PARSER_ELEMENT_TYPE_WORD) {
-                    int operator = parserReadOperator(&parser);
-                    if (operator == PARSER_ELEMENT_TYPE_OPERATOR_NEW) {
-                        parserSkipSkipable(&parser);
-                        if (parserError(&parser)) {
-                            fprintf(stderr, "%s %zu", BASIC_ERROR_MESSAGE, parser.readBytes);
-                            exit_and_clean(ERROR_EXIT_CODE);
-                        } else if (!parserReadIdentificator(&parser, word1)) {
-                            //todo memory error
-                            fprintf(stderr, "%s %zu", BASIC_ERROR_MESSAGE, parser.readBytes);
-                            exit_and_clean(ERROR_EXIT_CODE);
-                        } else if (parserError(&parser)) {
-                            fprintf(stderr, "%s %zu", BASIC_ERROR_MESSAGE, parser.readBytes);
-                            exit_and_clean(ERROR_EXIT_CODE);
-                        } else {
-                            makeVectorCStringCompatible(word1);
-                            currentBase = phoneBasesAddBase(bases, vectorBegin(word1));
-                        }
-                    } else if (operator == PARSER_ELEMENT_TYPE_OPERATOR_DELETE) {
-                        parserSkipSkipable(&parser);
-                        if (parserError(&parser)) {
-                            fprintf(stderr, "%s %zu", BASIC_ERROR_MESSAGE, parser.readBytes);
-                            exit_and_clean(ERROR_EXIT_CODE);
-                        } else {
-                            nextType = parserNextType(&parser);
-
-                            if (nextType == PARSER_ELEMENT_TYPE_NUMBER) {
-                                if (currentBase == NULL) {
-                                    fprintf(stderr, "%s %zu", BASIC_ERROR_MESSAGE, parser.readBytes);
-                                    exit_and_clean(ERROR_EXIT_CODE);
-                                }
-
-                                if (!parserReadNumber(&parser, word1) || parserError(&parser)) {
-                                    //todo memory error
-                                    fprintf(stderr, "%s %zu", BASIC_ERROR_MESSAGE, parser.readBytes);
-                                    exit_and_clean(ERROR_EXIT_CODE);
-                                } else {
-                                    makeVectorCStringCompatible(word1);
-                                    phfwdRemove(currentBase, vectorBegin(word1));
-                                }
-                            } else if (nextType == PARSER_ELEMENT_TYPE_WORD) {
-                                if (!parserReadIdentificator(&parser, word1) || parserError(&parser)) {
-                                    //todo memory error
-                                    fprintf(stderr, "%s %zu", BASIC_ERROR_MESSAGE, parser.readBytes);
-                                    exit_and_clean(ERROR_EXIT_CODE);
-                                } else {
-                                    makeVectorCStringCompatible(word1);
-                                    if (currentBase == phoneBasesGetBase(bases, vectorBegin(word1))) {
-                                        currentBase = NULL;
-                                    }
-                                    if (!phoneBasesDelBase(bases, vectorBegin(word1))) {
-                                        fprintf(stderr, "%s DEL %zu", BASIC_ERROR_MESSAGE, parser.readBytes);
-                                        exit_and_clean(ERROR_EXIT_CODE);
-                                    }
-                                }
-                            }
-                        }
-
-
-                    } else {
-                        //todo
-                        fprintf(stderr, "%s yyyy %zu", BASIC_ERROR_MESSAGE, parser.readBytes);
-                        exit_and_clean(ERROR_EXIT_CODE);
-                    }
-                } else if (nextType == PARSER_ELEMENT_TYPE_SINGLE_CHARACTER_OPERATOR) {
-                    int operator = parserReadOperator(&parser);
-                    if (operator == PARSER_ELEMENT_TYPE_OPERATOR_QM) {
-
-                        if (currentBase == NULL) {
-                            fprintf(stderr, "%s ? %zu", BASIC_ERROR_MESSAGE, parser.readBytes);
-                            exit_and_clean(ERROR_EXIT_CODE);
-                        }
-
-                        parserSkipSkipable(&parser);
-                        if (parserError(&parser)) {
-                            fprintf(stderr, "%s %zu", BASIC_ERROR_MESSAGE, parser.readBytes);
-                            exit_and_clean(ERROR_EXIT_CODE);
-                        } else if (!parserReadNumber(&parser, word1)) {
-                            //todo memory error
-                            fprintf(stderr, "%s %zu", BASIC_ERROR_MESSAGE, parser.readBytes);
-                            exit_and_clean(ERROR_EXIT_CODE);
-                        } else if (parserError(&parser)) {
-                            fprintf(stderr, "%s %zu", BASIC_ERROR_MESSAGE, parser.readBytes);
-                            exit_and_clean(ERROR_EXIT_CODE);
-                        } else {
-                            makeVectorCStringCompatible(word1);
-                            phoneNumbers = phfwdReverse(currentBase, vectorBegin(word1));
-
-                            if (phoneNumbers == NULL) {
-                                //todo memory error
-                                fprintf(stderr, "%s %zu", BASIC_ERROR_MESSAGE, parser.readBytes);
-                                exit_and_clean(ERROR_EXIT_CODE);
-                            } else {
-                                size_t i = 0;
-                                for (i = 0; phnumGet(phoneNumbers, i) != NULL; ++i) {
-                                    fprintf(stdout, "%s\n", phnumGet(phoneNumbers, i));
-                                }
-                                phnumDelete(phoneNumbers);
-                            }
-
-                        }
-                    } else {
-                        fprintf(stderr, "%s %zu", BASIC_ERROR_MESSAGE, parser.readBytes);
-                        exit_and_clean(ERROR_EXIT_CODE);
-                    }
-                }
-            }
-        }
-    }
-    return 0;
-}
-
-*/
