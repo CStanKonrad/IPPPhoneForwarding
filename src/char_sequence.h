@@ -14,15 +14,76 @@
 #include <stdlib.h>
 
 /**
- * @brief Struktura reprezentująca ciąg znaków.
+ * @see struct CharSequenceIterator
  */
-struct CharSequence;
-
+typedef struct CharSequenceIterator CharSequenceIterator;
 
 /**
  * @brief Wskaźnik na strukturę strukturę reprezentującą ciąg znaków.
  */
 typedef struct CharSequence *CharSequence;
+
+/**
+ * @brief Struktura reprezentująca ciąg znaków.
+ */
+struct CharSequence;
+
+/**
+ * @brief Struktura reprezentująca iterator ciągu znaków.
+ */
+struct CharSequenceIterator {
+    /**
+     * @brief Wskaźnik na element ciągu znaków (blok).
+     */
+    CharSequence sequenceBlockPtr;
+
+    /**
+     * @brief Index litery z bloku.
+     */
+    size_t charId;
+
+    /**
+     * @brief Czy przejrzano wszystko.
+     */
+    bool isEnd;
+};
+
+/**
+ * @brief Tworzy iterator dla ciągu @p sequence.
+ * @param[in] sequence - wskaźnik na ciąg dla którego tworzony jest iterator.
+ * @return Iterator dla @p sequence.
+ */
+CharSequenceIterator charSequenceGetIterator(CharSequence sequence);
+
+/**
+ * @brief Sprawdza czy dwa iteratory reprezentują to samo miejsce.
+ * @param[in] a - iterator
+ * @param[in] b - iterator
+ * @return Jeżeli reprezentują to samo miejsce w tym samym ciągu to true,
+ *         w przeciwnym wypadku false.
+ */
+bool charSequenceIteratorsEqual(CharSequenceIterator *a,
+                                CharSequenceIterator *b);
+
+/**
+ * @brief Łączy ciągi.
+ * Poszerza ciąg @p a o ciąg @p b, wskaźnik @p b
+ * ciąg @p b przestaje istnieć.
+ * @param[in, out] a - wskaźnik na ciąg, aktualny po operacji.
+ * @param[in, out] b - wskaźnik na ciąg, nieaktualny po operacji.
+ */
+void charSequenceMerge(CharSequence a, CharSequence b);
+
+/**
+ * @brief Tnie Ciąg @p sequence w punkcie @p it.
+ * @param[in, out] sequence - wskaźnik na cięty ciąg, po operacji
+ *       odpowiada ciągowi [sequence; it).
+ * @param[in, out] it - wskaźnik na punkt rozcięcia.
+ * @return Wskaźnik na ciąg [it; ..],
+ *         w przypadku problemów z pamięcią NULL.
+ */
+CharSequence charSequenceSplitByIterator(CharSequence sequence,
+                                         CharSequenceIterator *it);
 
 /**
  * @brief Tworzy ciąg znaków z cstringa.
@@ -41,21 +102,21 @@ void charSequenceDelete(CharSequence node);
 
 /**
  * @brief Pobiera znak.
- * @param[in] sequence - wskaźnik na pozycję w ciągu.
- * @return Znak znajdujący się na pozycji @p sequence, jeżeli
- *         @p sequence jest NULLem to zwraca '\0'.
+ * @param[in] it - wskaźnik na pozycję w ciągu.
+ * @return Znak znajdujący się na pozycji @p it, jeżeli
+ *         @p sequence doszedł do końca to zwraca '\0'.
  */
-char charSequenceGetChar(CharSequence sequence);
+char charSequenceGetChar(CharSequenceIterator *it);
 
 /**
- * @brief Pobiera Znak i przestawia @p *sequence na znak następny.
- * @param[in] sequence - wskaźnik na element ciągu znaków.
- * @param[out] ch - znak znajdujący się w elemencie @p *sequence, jeżeli
- *       @p *sequence == NULL to '\0'.
- * @return Wartośc true jeżeli udało się pobrać znak, false
+ * @brief Pobiera Znak i przestawia @p *it na znak następny.
+ * @param[in] it - wskaźnik na element ciągu znaków.
+ * @param[out] ch - znak znajdujący się w elemencie @p *it, jeżeli
+ *       brak znaków to '\0'.
+ * @return Wartość true jeżeli udało się pobrać znak, false
  *         w przeciwnym wypadku.
  */
-bool charSequenceNextChar(CharSequence *sequence, char *ch);
+bool charSequenceNextChar(CharSequenceIterator *it, char *ch);
 
 /**
  * @brief Liczba elementów w ciągu @p sequence.
@@ -82,26 +143,10 @@ const char *charSequenceToCString(CharSequence sequence);
 bool charSequenceEqualToString(CharSequence sequence, const char *str);
 
 /**
- * @brief Zwraca Wskaźnik reprezentujący koniec @p sequence.
+ * @brief Zwraca iterator reprezentujący koniec @p sequence.
  * @param[in] sequence - wskaźnik na ciąg znaków.
- * @remarks Koniec oznacza tu wskaźnik na pozycję informującą, że ciąg się
- *         skończył.
  * @return Wskaźnik reprezentujący koniec @p sequence.
  */
-CharSequence charSequenceSequenceEnd(CharSequence sequence);
-
-/**
- * @brief Zwraca Wskaźnik reprezentujący ostatni element @p sequence.
- * @param[in] sequence - wskaźnik na ciąg znaków.
- * @return Wskaźnik reprezentujący ostatni element @p sequence.
- */
-CharSequence charSequenceLast(CharSequence sequence);
-
-/**
- * @brief ustawia następnika elementu ciągu.
- * @param[in] a - element ciągu.
- * @param[in] next - następnik.
- */
-void charSequenceSetNext(CharSequence a, CharSequence next);
+CharSequenceIterator charSequenceSequenceEnd(CharSequence sequence);
 
 #endif //TELEFONY_CAHR_SEQUENCE_H

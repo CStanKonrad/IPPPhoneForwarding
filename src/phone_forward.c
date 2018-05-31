@@ -257,7 +257,6 @@ struct ForwardData {
  * @param[in] bwInsert
  */
 static void phfwdPrepareClean(RadixTreeNode fwInsert, RadixTreeNode bwInsert) {
-
     radixTreeBalance(bwInsert);
     radixTreeBalance(fwInsert);
 }

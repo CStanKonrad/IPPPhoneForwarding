@@ -8,41 +8,199 @@
 
 #include <assert.h>
 #include <string.h>
+#include <stdbool.h>
 #include "char_sequence.h"
+#include "stdfunc.h"
+#include "text.h"
 
 /**
- * @brief Struktura opisująca element ciągu znaków.
+ * @brief Maxymalna liczba znaków w bloku (węźle) ciągu znaków.
+ */
+#define CHAR_SEQUENCE_MAX_LETTERS_IN_BLOCK 500
+
+/**
+ * @brief Struktura opisująca element ciągu znaków (blok).
  */
 struct CharSequence {
     /**
-     * @brief Litera w ciągu.
+     * @brief Litery w bloku.
      */
-    char letter;
+    char *letters;
 
     /**
-     * @brief Następny element w ciągu.
+     * @brief Następny element (blok) w ciągu.
      */
     CharSequence next;
 };
 
 /**
+ * @brief Sprawdza czy iterator nie ma już więcej elementów do przejrzenia.
+ * @param[in] it - wskaźnik na iterator ciągu znaków.
+ * @return true jeżeli brak elementów do przejrzenia, false w przeciwnym wypadku.
+ */
+static bool charSequenceIteratorEnd(CharSequenceIterator *it) {
+    return it->isEnd;
+}
+
+/**
+ * @brief Znak wskazywany przez iterator.
+ * @param[in] it - wskaźnik na iterator ciągu znaków.
+ * @return Znak wskazywany przez iterator, jeżeli @p charSequenceIteratorEnd
+ *         to '\0'.
+ */
+static char charSequenceIteratorGetChar(CharSequenceIterator *it) {
+    if (charSequenceIteratorEnd(it)) {
+        return '\0';
+    } else {
+        return it->sequenceBlockPtr->letters[it->charId];
+    }
+}
+
+/**
+ * @brief Przesuwa iterator dalej.
+ * @param[in, out] it  - wskaźnik na iterator ciągu znaków.
+ */
+static void charSequenceIteratorIncrement(CharSequenceIterator *it) {
+    assert(it->charId < strlen(it->sequenceBlockPtr->letters));
+    if (charSequenceIteratorEnd(it)) {
+        return;
+    } else {
+        if (it->sequenceBlockPtr->letters[it->charId + 1] != '\0') {
+            it->charId++;
+        } else {
+            it->charId = 0;
+            it->sequenceBlockPtr = it->sequenceBlockPtr->next;
+            if (it->sequenceBlockPtr == NULL) {
+                it->isEnd = true;
+            }
+        }
+    }
+}
+
+/**
  * @brief inicjuje węzeł ciągu znaków.
  * @param[in, out] node - wskaźnik na węzeł.
- * @param[in] letter - znak który ma być przechowywany w węźle.
+ * @param[in] letters - znak który ma być przechowywany w węźle.
  */
-static void charSequenceInitNewNode(CharSequence node, char letter) {
+static void charSequenceInitNewNode(CharSequence node, char *letters) {
     assert(node != NULL);
-    node->letter = letter;
+    node->letters = letters;
     node->next = NULL;
 }
 
 /**
  * @brief Usuwa węzeł.
- * @param[in] node - wskaźnik na węzeł.
+ * @param[in, out] node - wskaźnik na węzeł.
  */
 static void charSequenceDeleteNode(CharSequence node) {
     assert(node != NULL);
+    if (node->letters != NULL) {
+        free(node->letters);
+        node->letters = NULL;
+    }
     free(node);
+}
+
+CharSequenceIterator charSequenceGetIterator(CharSequence sequence) {
+    CharSequenceIterator result;
+    result.isEnd = false;
+    result.charId = 0;
+    result.sequenceBlockPtr = sequence;
+
+    return result;
+}
+
+bool charSequenceIteratorsEqual(CharSequenceIterator *a,
+                                CharSequenceIterator *b) {
+    return a->sequenceBlockPtr == b->sequenceBlockPtr
+           && a->charId == b->charId
+           && a->isEnd == b->isEnd;
+}
+
+void charSequenceMerge(CharSequence a, CharSequence b) {
+    assert(a != NULL);
+    CharSequence ptr = a;
+
+    while (ptr->next != NULL) {
+        ptr = ptr->next;
+    }
+
+    size_t leftLen = strlen(ptr->letters);
+    size_t rightLen = strlen(b->letters);
+
+    if (leftLen + rightLen < CHAR_SEQUENCE_MAX_LETTERS_IN_BLOCK) {
+        char *txt = concatenate(ptr->letters, b->letters);
+        if (txt != NULL) {
+            free(ptr->letters);
+            ptr->letters = txt;
+            ptr->next = b->next;
+            charSequenceDeleteNode(b);
+        } else {
+            ptr->next = b;
+        }
+    } else {
+        ptr->next = b;
+    }
+
+
+}
+
+CharSequence charSequenceSplitByIterator(CharSequence sequence,
+                                         CharSequenceIterator *it) {
+    assert(!charSequenceIteratorEnd(it));
+
+    if (it->charId == 0) {
+        CharSequence result = it->sequenceBlockPtr;
+
+        CharSequence ptr = sequence;
+
+        assert(ptr != it->sequenceBlockPtr);
+        assert(ptr != NULL);
+
+        while (ptr->next != it->sequenceBlockPtr) {
+            ptr = ptr->next;
+        }
+        ptr->next = NULL;
+
+        return result;
+    } else {
+        char *textA = malloc(sizeof(char) * (it->charId + (size_t) 1));
+        if (textA == NULL) {
+            return NULL;
+        } else {
+            size_t textLeftLen = strlen(it->sequenceBlockPtr->letters) - it->charId;
+            char *textB = malloc(sizeof(char) * (textLeftLen + (size_t) 1));
+
+            if (textB == NULL) {
+                free(textA);
+                return NULL;
+            } else {
+                copyText(it->sequenceBlockPtr->letters, textA, it->charId);
+                copyText(it->sequenceBlockPtr->letters + it->charId, textB,
+                         textLeftLen);
+
+
+                CharSequence newBlock = malloc(sizeof(struct CharSequence));
+                if (newBlock == NULL) {
+                    free(textB);
+                    free(textA);
+                    return NULL;
+                } else {
+                    charSequenceInitNewNode(newBlock, textB);
+                    newBlock->next = it->sequenceBlockPtr->next;
+
+                    free(it->sequenceBlockPtr->letters);
+                    it->sequenceBlockPtr->letters = textA;
+                    it->sequenceBlockPtr->next = NULL;
+
+                    it->sequenceBlockPtr = newBlock;
+                    it->charId = 0;
+
+                    return it->sequenceBlockPtr;
+                }
+            }
+        }
+    }
 }
 
 void charSequenceDelete(CharSequence node) {
@@ -55,49 +213,87 @@ void charSequenceDelete(CharSequence node) {
     }
 }
 
-CharSequence charSequenceFromCString(const char *str) {
-    CharSequence result = malloc(sizeof(struct CharSequence));
+/**
+ * @brief Funkcja pomocnicza do czyszczenia pamięci dla @p charSequenceFromCString.
+ * @param[in] blocks - bloki do wyczyszczenia.
+ * @param[in] last - numer ostatniego do wyczyszczenia.
+ */
+static void charSequenceFromCStringFreeBlocks(struct CharSequence **blocks,
+                                              size_t last) {
+    size_t i;
+    for (i = 0; i <= last; i++) {
+        if (blocks[i] != NULL) {
+            charSequenceDeleteNode(blocks[i]);
+        }
+    }
 
-    if (result == NULL) {
+    free(blocks);
+}
+
+CharSequence charSequenceFromCString(const char *str) {
+    size_t strLength = strlen(str);
+    size_t numberOfBlocks = strLength / CHAR_SEQUENCE_MAX_LETTERS_IN_BLOCK
+                            + (strLength % CHAR_SEQUENCE_MAX_LETTERS_IN_BLOCK != 0);
+
+    struct CharSequence **blocks = malloc(sizeof(struct CharSequence *)
+                                          * numberOfBlocks);
+    if (blocks == NULL) {
         return NULL;
     } else {
-        charSequenceInitNewNode(result, str[0]);
-
-        CharSequence insertPtr = result;
         size_t i;
-        for (i = 1; str[i] != '\0'; i++) {
-            insertPtr->next = malloc(sizeof(struct CharSequence));
-            if (insertPtr->next == NULL) {
-                charSequenceDelete(result);
+        for (i = 0; i < numberOfBlocks; i++) {
+            blocks[i] = malloc(sizeof(struct CharSequence));
+            if (blocks[i] == NULL) {
+                charSequenceFromCStringFreeBlocks(blocks, i);
                 return NULL;
             } else {
-                insertPtr = insertPtr->next;
-                charSequenceInitNewNode(insertPtr, str[i]);
+                charSequenceInitNewNode(blocks[i], NULL);
+                if (i > 0) {
+                    blocks[i - 1]->next = blocks[i];
+                }
+
+                size_t toAddSize
+                        = MIN(CHAR_SEQUENCE_MAX_LETTERS_IN_BLOCK,
+                              strLength - i * CHAR_SEQUENCE_MAX_LETTERS_IN_BLOCK);
+
+                blocks[i]->letters = malloc(sizeof(char)
+                                            * (toAddSize + (size_t) 1));
+
+                if (blocks[i]->letters == NULL) {
+                    charSequenceFromCStringFreeBlocks(blocks, i);
+                    return NULL;
+                } else {
+                    copyText(str + i * CHAR_SEQUENCE_MAX_LETTERS_IN_BLOCK,
+                             blocks[i]->letters, toAddSize);
+                }
             }
         }
     }
+    CharSequence result = *blocks;
+    free(blocks);
     return result;
+
 }
 
-bool charSequenceNextChar(CharSequence *sequence, char *ch) {
-    if (*sequence == NULL) {
+bool charSequenceNextChar(CharSequenceIterator *it, char *ch) {
+    if (charSequenceIteratorEnd(it)) {
         if (ch != NULL) {
             *ch = '\0';
         }
         return false;
     } else {
         if (ch != NULL) {
-            *ch = (*sequence)->letter;
+            *ch = charSequenceIteratorGetChar(it);
         }
-        (*sequence) = (*sequence)->next;
+        charSequenceIteratorIncrement(it);
         return true;
     }
 }
 
 size_t charSequenceLength(CharSequence sequence) {
     size_t result = 0;
-    CharSequence ptr = sequence;
-    while (charSequenceNextChar(&ptr, NULL)) {
+    CharSequenceIterator it = charSequenceGetIterator(sequence);
+    while (charSequenceNextChar(&it, NULL)) {
         result++;
     }
 
@@ -113,9 +309,9 @@ const char *charSequenceToCString(CharSequence sequence) {
         return NULL;
     } else {
         size_t i = 0;
-        CharSequence j = sequence;
+        CharSequenceIterator it = charSequenceGetIterator(sequence);
         char out;
-        while (charSequenceNextChar(&j, &out)) {
+        while (charSequenceNextChar(&it, &out)) {
             result[i] = out;
             i++;
         }
@@ -128,45 +324,28 @@ bool charSequenceEqualToString(CharSequence sequence, const char *str) {
 
     size_t i;
     char let;
-    CharSequence ptr = sequence;
+    CharSequenceIterator it = charSequenceGetIterator(sequence);
     for (i = 0; str[i] != '\0'; i++) {
-        if (!charSequenceNextChar(&ptr, &let)) {
+        if (!charSequenceNextChar(&it, &let)) {
             return false;
         } else if (let != str[i]) {
             return false;
         }
 
     }
-    return !charSequenceNextChar(&ptr, &let);
+    return !charSequenceNextChar(&it, &let);
 
 
 }
 
-CharSequence charSequenceSequenceEnd(CharSequence sequence) {
-    (void) sequence;
-    return NULL;
+CharSequenceIterator charSequenceSequenceEnd(CharSequence sequence) {
+    CharSequenceIterator result = charSequenceGetIterator(sequence);
+    result.isEnd = true;
+    return result;
 }
 
 
-char charSequenceGetChar(CharSequence sequence) {
-    if (sequence == NULL) {
-        return '\0';
-    } else {
-        return sequence->letter;
-    }
+char charSequenceGetChar(CharSequenceIterator *it) {
+    return charSequenceIteratorGetChar(it);
 }
 
-CharSequence charSequenceLast(CharSequence sequence) {
-    CharSequence ptr = sequence;
-    CharSequence prev = ptr;
-    while (charSequenceNextChar(&ptr, NULL)) {
-        if (ptr != NULL) {
-            prev = ptr;
-        }
-    }
-    return prev;
-}
-
-void charSequenceSetNext(CharSequence a, CharSequence next) {
-    a->next = next;
-}

@@ -225,7 +225,7 @@ static void radixTreeChangeSon(RadixTreeNode node, char son,
  *        po próbie dopasowania wskazuje
  *        na element za ostatnim pasującym, w przypadku pełnego
  *        dopasowania na '\0'.
- * @param[out] nodeTxtPtr - wskaźnik na wskaźnik na dopasowanie
+ * @param[out] nodeTxtPtr - wskaźnik na iterator dopasowania
  *        w ramach węzła @p node (krawędzi do niego wchodzącej).
  *        @p *nodeTxtPtr
  *        po próbie dopasowania wskazuje
@@ -235,22 +235,22 @@ static void radixTreeChangeSon(RadixTreeNode node, char son,
  *         RADIX_TREE_OPERATION_FAIL w przeciwnym przypadku.
  */
 static int radixTreeMoveTxt(RadixTreeNode node, const char **txt,
-                            CharSequence *nodeTxtPtr) {
-    CharSequence i = node->txt;
+                            CharSequenceIterator *nodeTxtPtr) {
+    CharSequenceIterator i = charSequenceGetIterator(node->txt);
 
     if (radixTreeIsRoot(node)) {
         i = charSequenceSequenceEnd(node->txt);
     } else {
-        while (charSequenceGetChar(i) != '\0'
+        while (charSequenceGetChar(&i) != '\0'
                && *(*txt) != '\0'
-               && charSequenceGetChar(i) == *(*txt)) {
+               && charSequenceGetChar(&i) == *(*txt)) {
             charSequenceNextChar(&i, NULL);
             (*txt)++;
         }
     }
 
     *nodeTxtPtr = i;
-    if (charSequenceGetChar(i) == '\0') {
+    if (charSequenceGetChar(&i) == '\0') {
         return RADIX_TREE_OPERATION_SUCCESS;
     } else {
         return RADIX_TREE_OPERATION_FAIL;
@@ -273,7 +273,7 @@ static int radixTreeMoveTxt(RadixTreeNode node, const char **txt,
  *         dopasowania, RADIX_TREE_OPERATION_SUCCESS w przeciwnym przypadku.
  */
 static int radixTreeMove(RadixTreeNode *node, const char **txt,
-                         CharSequence *nodeTxtPtr) {
+                         CharSequenceIterator *nodeTxtPtr) {
     assert(*(*txt) != '\0');
     if (!radixTreeHasSon(*node, *(*txt))) {
         return RADIX_TREE_OPERATION_FAIL;
@@ -293,7 +293,8 @@ static int radixTreeMove(RadixTreeNode *node, const char **txt,
  *       @p *txtMatchPtr wyłącznie jest dopasowany w drzewie
  *       @p tree (istnieje droga od korzenia do liścia idąca w dół,
  *       taka, że @p txt jest jej podciągiem).
- * @param[out] nodeMatchPtr - wskaźnik na dopasowanie krawędzi wchodzącej do
+ * @param[out] nodeMatchPtr - wskaźnik iterator dopasowania krawędzi wchodzącej
+ *       do
  *       @p *ptr.
  * @return W przypadku gdy węzeł reprezentujący @p txt istnieje w drzewie
  *         RADIX_TREE_FOUND, w przypadku gdy @p txt jest podciągiem
@@ -304,7 +305,7 @@ static int radixTreeFindEx(RadixTree tree,
                            const char *txt,
                            RadixTreeNode *ptr,
                            const char **txtMatchPtr,
-                           CharSequence *nodeMatchPtr) {
+                           CharSequenceIterator *nodeMatchPtr) {
     *ptr = tree;
     *txtMatchPtr = txt;
     *nodeMatchPtr = charSequenceSequenceEnd((*ptr)->txt);
@@ -313,7 +314,7 @@ static int radixTreeFindEx(RadixTree tree,
            && radixTreeMove(ptr, txtMatchPtr, nodeMatchPtr)
               == RADIX_TREE_OPERATION_SUCCESS);
 
-    if (charSequenceGetChar((*nodeMatchPtr)) == '\0'
+    if (charSequenceGetChar((nodeMatchPtr)) == '\0'
         && *(*txtMatchPtr) == '\0') {
         return RADIX_TREE_FOUND;
     } else if (*(*txtMatchPtr) == '\0') {
@@ -330,10 +331,10 @@ static int radixTreeFindEx(RadixTree tree,
  * @return Długość dopasowania krawędzi wchodzącej do węzła @p node.
  */
 static size_t radixTreeHowManyCharsOffset(RadixTreeNode node,
-                                          CharSequence txt) {
-    CharSequence ptr = node->txt;
+                                          CharSequenceIterator *txt) {
+    CharSequenceIterator ptr = charSequenceGetIterator(node->txt);
     size_t result = 0;
-    while (ptr != txt) {
+    while (!charSequenceIteratorsEqual(&ptr, txt)) {
         charSequenceNextChar(&ptr, NULL);
         result++;
     }
@@ -343,14 +344,14 @@ static size_t radixTreeHowManyCharsOffset(RadixTreeNode node,
 int radixTreeFind(RadixTree tree, const char *txt, RadixTreeNode *ptr,
                   const char **txtMatchPtr, size_t *nodeMatch,
                   int *nodeMatchMode) {
-    CharSequence nodeMatchPtr;
+    CharSequenceIterator nodeMatchPtr;
     int result = radixTreeFindEx(tree, txt, ptr, txtMatchPtr, &nodeMatchPtr);
 
-    if (charSequenceGetChar(nodeMatchPtr) == '\0') {
+    if (charSequenceGetChar(&nodeMatchPtr) == '\0') {
         *nodeMatch = charSequenceLength((*ptr)->txt);
         *nodeMatchMode = RADIX_TREE_NODE_MATCH_FULL;
     } else {
-        *nodeMatch = radixTreeHowManyCharsOffset(*ptr, nodeMatchPtr);
+        *nodeMatch = radixTreeHowManyCharsOffset(*ptr, &nodeMatchPtr);
         *nodeMatchMode = RADIX_TREE_NODE_MATCH_PARTIAL;
     }
     return result;
@@ -366,36 +367,33 @@ size_t radixTreeHowManyChars(RadixTreeNode node) {
  * Rozdziela węzeł @p node na dwa tnąc krawędź do niego wchodzącą w punkcie
  * @p splitPtr.
  * @param[in] node - wskaźnik na węzeł.
- * @param[in] splitPtr - wskaźnik na miejsce rozcinające w tekście krawędzi
+ * @param[in] splitPtr - wskaźnik na iterator wskazujący na
+ *        miejsce rozcinające w tekście krawędzi
  *        (przechowywane w węźle).
  * @return RADIX_TREE_OPERATION_SUCCESS w przypadku udanego rozcięcia,
  *         RADIX_TREE_OPERATION_FAIL w przeciwnym przypadku.
  */
-static int radixTreeSplitNode(RadixTreeNode node, CharSequence splitPtr) {
+static int radixTreeSplitNode(RadixTreeNode node, CharSequenceIterator *splitPtr) {
     RadixTreeNode newNode = radixTreeCreateNode();
 
     if (newNode == NULL) {
         return RADIX_TREE_OPERATION_FAIL;
     } else {
-
+//todo
         newNode->txt = node->txt;
 
-        CharSequence ptr = newNode->txt;
-        CharSequence prev = ptr;
-        while (ptr != splitPtr) {
-            prev = ptr;
-            charSequenceNextChar(&ptr, NULL);
-        }
-        charSequenceSetNext(prev, NULL);
+        CharSequence ptr = charSequenceSplitByIterator(node->txt, splitPtr);
 
-        node->txt = splitPtr;
+        node->txt = ptr;
 
         newNode->father = node->father;
-        radixTreeChangeSon(node->father, charSequenceGetChar(newNode->txt),
+        CharSequenceIterator it = charSequenceGetIterator(newNode->txt);
+        radixTreeChangeSon(node->father, charSequenceGetChar(&it),
                            newNode);
 
         node->father = newNode;
-        radixTreeChangeSon(newNode, charSequenceGetChar(node->txt), node);
+        it = charSequenceGetIterator(node->txt);
+        radixTreeChangeSon(newNode, charSequenceGetChar(&it), node);
         return RADIX_TREE_OPERATION_SUCCESS;
 
     }
@@ -421,8 +419,9 @@ static RadixTreeNode radixTreeInsertLeaf(RadixTreeNode node, const char *txt) {
             newNode->txt = textToInsert;
 
             newNode->father = node;
-            assert(!radixTreeHasSon(node, charSequenceGetChar(newNode->txt)));
-            radixTreeChangeSon(node, charSequenceGetChar(newNode->txt),
+            CharSequenceIterator it = charSequenceGetIterator(newNode->txt);
+            assert(!radixTreeHasSon(node, charSequenceGetChar(&it)));
+            radixTreeChangeSon(node, charSequenceGetChar(&it),
                                newNode);
 
             return newNode;
@@ -433,22 +432,22 @@ static RadixTreeNode radixTreeInsertLeaf(RadixTreeNode node, const char *txt) {
 RadixTreeNode radixTreeInsert(RadixTree tree, const char *txt) {
     RadixTreeNode insertPtr;
     const char *matchPtr;
-    CharSequence nodeMatchPtr;
+    CharSequenceIterator nodeMatchPtr;
     int findResult = radixTreeFindEx(tree, txt, &insertPtr,
                                      &matchPtr, &nodeMatchPtr);
 
     if (findResult == RADIX_TREE_FOUND) {
         return insertPtr;
     } else if (findResult == RADIX_TREE_SUBSTR) {
-        int splitResult = radixTreeSplitNode(insertPtr, nodeMatchPtr);
+        int splitResult = radixTreeSplitNode(insertPtr, &nodeMatchPtr);
         if (splitResult == RADIX_TREE_OPERATION_SUCCESS) {
             return insertPtr->father;
         } else {
             return NULL;
         }
     } else if (findResult == RADIX_TREE_NOT_FOUND) {
-        if (charSequenceGetChar(nodeMatchPtr) != '\0') {
-            int splitResult = radixTreeSplitNode(insertPtr, nodeMatchPtr);
+        if (charSequenceGetChar(&nodeMatchPtr) != '\0') {
+            int splitResult = radixTreeSplitNode(insertPtr, &nodeMatchPtr);
             if (splitResult == RADIX_TREE_OPERATION_SUCCESS) {
                 return radixTreeInsert(tree, txt);
             } else {
@@ -478,7 +477,8 @@ void radixTreeDeleteSubTree(RadixTreeNode subTreeNode,
             }
             tmp = pos;
             pos = pos->father;
-            radixTreeChangeSon(pos, charSequenceGetChar(tmp->txt), NULL);
+            CharSequenceIterator it = charSequenceGetIterator(tmp->txt);
+            radixTreeChangeSon(pos, charSequenceGetChar(&it), NULL);
             radixTreeFreeNode(tmp);
 
         } else {
@@ -495,8 +495,9 @@ void radixTreeDeleteSubTree(RadixTreeNode subTreeNode,
         subTreeNode->data = NULL;
     }
     if (!radixTreeIsRoot(subTreeNode)) {
+        CharSequenceIterator it = charSequenceGetIterator(subTreeNode->txt);
         radixTreeChangeSon(subTreeNode->father,
-                           charSequenceGetChar(subTreeNode->txt), NULL);
+                           charSequenceGetChar(&it), NULL);
     }
     radixTreeFreeNode(subTreeNode);
 }
@@ -546,14 +547,16 @@ static RadixTreeNode radixTreeFirstSon(RadixTreeNode node) {
  *          w przeciwnym przypadku RADIX_TREE_OPERATION_SUCCESS.
  */
 static int radixTreeMerge(RadixTreeNode a, RadixTreeNode b) {
-
-    CharSequence aLast = charSequenceLast(a->txt);
-    charSequenceSetNext(aLast, b->txt);
+    assert(charSequenceLength(b->txt) != 0);
+    charSequenceMerge(a->txt, b->txt);
     b->txt = a->txt;
     a->txt = NULL;
 
+    assert(charSequenceLength(b->txt) != 0);
+
     b->father = a->father;
-    radixTreeChangeSon(a->father, charSequenceGetChar(b->txt), b);
+    CharSequenceIterator it = charSequenceGetIterator(b->txt);
+    radixTreeChangeSon(a->father, charSequenceGetChar(&it), b);
     radixTreeFreeNode(a);
 
     return RADIX_TREE_OPERATION_SUCCESS;
@@ -570,7 +573,8 @@ void radixTreeBalance(RadixTreeNode node) {
         if (radixTreeIsNodeRedundant(pos)) {
             tmp = pos;
             pos = pos->father;
-            radixTreeChangeSon(pos, charSequenceGetChar(tmp->txt), NULL);
+            CharSequenceIterator it = charSequenceGetIterator(tmp->txt);
+            radixTreeChangeSon(pos, charSequenceGetChar(&it), NULL);
             radixTreeFreeNode(tmp);
         } else if (radixTreeCanBeMergedWithSon(pos)) {
             tmp = pos;
@@ -614,11 +618,10 @@ char *radixGetFullText(RadixTreeNode node) {
         result[length] = '\0';
         pos = node;
         while (!radixTreeIsRoot(pos)) {
-
             size_t len = charSequenceLength(pos->txt);
             size_t i;
             length -= len;
-            CharSequence ptr = pos->txt;
+            CharSequenceIterator ptr = charSequenceGetIterator(pos->txt);
             char out;
             for (i = 0; i < len; i++) {
                 charSequenceNextChar(&ptr, &out);

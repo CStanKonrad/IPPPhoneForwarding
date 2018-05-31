@@ -582,7 +582,7 @@ static void readOperation(int nextType) {
  */
 int main() {
     initProgram();
-
+    
     while (true) {
         loopStepClear();
         skipSkipable();
