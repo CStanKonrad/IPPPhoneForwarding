@@ -41,6 +41,16 @@
 #define PARSER_OPERATOR_REDIRECT (STRING_TO_CHAR(PARSER_OPERATOR_REDIRECT_STRING))
 
 /**
+ * @brief Ciąg znaków reprezentujący operator liczby nietrywialnych numerów.
+ */
+#define PARSER_OPERATOR_NONTRIVIAL_STRING "@"
+
+/**
+ * @brief Znak reprezentujący operator liczby nietrywialnych numerów.
+ */
+#define PARSER_OPERATOR_NONTRIVIAL (STRING_TO_CHAR(PARSER_OPERATOR_NONTRIVIAL_STRING))
+
+/**
  * @brief Ciąg znaków odpowiadający operatorowi stworzenia nowej bazy.
  */
 #define PARSER_OPERATOR_NEW "NEW"
@@ -93,6 +103,12 @@
  * @see parserReadOperator
  */
 #define PARSER_ELEMENT_TYPE_OPERATOR_DELETE 7
+
+/**
+ * @see parserReadOperator
+ */
+#define PARSER_ELEMENT_TYPE_OPERATOR_NONTRIVIAL 8
+
 
 
 /**
@@ -157,7 +173,8 @@ bool parserFinished(Parser parser);
  *         PARSER_ELEMENT_TYPE_WORD (identyfikator lub PARSER_OPERATOR_NEW
  *         lub PARSER_OPERATOR_DELETE),
  *         PARSER_ELEMENT_TYPE_SINGLE_CHARACTER_OPERATOR
- *         (PARSER_OPERATOR_QM lub PARSER_OPERATOR_REDIRECT),
+ *         (PARSER_OPERATOR_QM lub PARSER_OPERATOR_REDIRECT,
+ *         lub PARSER_OPERATOR_NONTRIVIAL),
  *         PARSER_FAIL (coś innego).
  * @remarks W przypadku PARSER_FAIL następny znak z wejścia zostaje wczytany
  *          (ustawiona zostaje także flaga dotycząca błędu w @p parser),
@@ -174,6 +191,7 @@ int parserNextType(Parser parser);
  *         PARSER_ELEMENT_TYPE_OPERATOR_REDIRECT (PARSER_OPERATOR_REDIRECT),
  *         PARSER_ELEMENT_TYPE_OPERATOR_NEW (PARSER_OPERATOR_NEW),
  *         PARSER_ELEMENT_TYPE_OPERATOR_DELETE (PARSER_OPERATOR_DELETE)
+ *         PARSER_ELEMENT_TYPE_OPERATOR_NONTRIVIAL (PARSER_OPERATOR_NONTRIVIAL)
  *         PARSER_FAIL (Nieznany operator
  *         lub @p parserFinished(parser) zwraca true).
  */

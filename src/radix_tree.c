@@ -11,6 +11,7 @@
 #include <string.h>
 #include <stdlib.h>
 #include <assert.h>
+#include <stdio.h>
 #include "radix_tree.h"
 #include "text.h"
 
@@ -123,7 +124,7 @@ RadixTree radixTreeCreate() {
  * @return Numer syna.
  */
 static size_t radixTreeConvertCharToNumber(char sonCh) {
-    assert(sonCh <= '9' && sonCh >= '0');
+    //assert(sonCh <= '9' && sonCh >= '0');
     return (size_t) sonCh - (size_t) '0';
 }
 
@@ -666,4 +667,105 @@ void radixTreeCountDataFunction(void *ptrA, void *ptrB) {
     if (ptrA != NULL) {
         (*counter)++;
     }
+}
+
+/**
+ * @brief Liczy liczbę nietrywialnych numerów długości @p lettersLeft.
+ * @param[in] lettersLeft - liczba pozostałych liter do wypełnienia.
+ * @param[in] howManyDigitsAv - liczba dostępnych różnych cyfr.
+ * @return Liczba nietrywialnych numerów długości @p lettersLeft.
+ */
+static size_t radixTreeNonTrivialCountCount(size_t lettersLeft,
+                                            size_t howManyDigitsAv) {
+    if (lettersLeft == 0) {
+        return 1;
+    } else if (lettersLeft == 1) {
+        return howManyDigitsAv;
+    } else {
+        if (lettersLeft % 2 == 1) {
+            return howManyDigitsAv
+                   * radixTreeNonTrivialCountCount(lettersLeft - 1,
+                                                   howManyDigitsAv);
+        } else {
+            return radixTreeNonTrivialCountCount(lettersLeft / 2,
+                                                 howManyDigitsAv)
+                   * radixTreeNonTrivialCountCount(lettersLeft / 2,
+                                                   howManyDigitsAv);
+        }
+    }
+}
+
+/**
+ * Sprawdza czy część numeru reprezentowana przez seq
+ * składa się tylko z cyfr opisywanych przez @p availableDigits.
+ * @param[in] seq - ciąg cyfr.
+ * @param[in] availableDigits - dostępne cyfry.
+ * @return true jeżeli tak, false w przeciwnym wypadku.
+ */
+static bool radixTreeNonTrivialCountCheck(CharSequence seq,
+                                          const bool *availableDigits) {
+    CharSequenceIterator it = charSequenceGetIterator(seq);
+    char ch;
+    while (charSequenceNextChar(&it, &ch)) {
+        if (!availableDigits[ch -'0']) {
+            return false;
+        }
+    }
+
+    return true;
+}
+
+
+size_t radixTreeNonTrivialCount(RadixTree tree, size_t maxLen,
+                                const bool *availableDigits,
+                                size_t howManyDigitsAvailable) {
+
+    assert(maxLen != 0);
+    size_t result = 0;
+    size_t len = 0;
+    RadixTreeNode pos = tree;
+    pos->foldI = 0;
+    pos->helper = 0;
+
+    while (!(pos == tree
+             && pos->foldI == RADIX_TREE_NUMBER_OF_SONS)) {
+        size_t *i = &pos->foldI;
+
+
+        if (*i == 0 && pos != tree) {
+            bool isGreater = false;
+            pos->helper = charSequenceLengthLimited(pos->txt, maxLen - len,
+                                                &isGreater);
+            len += pos->helper;
+            assert(len <= maxLen);
+            if (isGreater
+                || !radixTreeNonTrivialCountCheck(pos->txt, availableDigits)) {
+                *i = RADIX_TREE_NUMBER_OF_SONS;
+            } else {
+                if (pos->data != NULL) {
+                    result += radixTreeNonTrivialCountCount(maxLen - len,
+                                                  howManyDigitsAvailable);
+                    *i = RADIX_TREE_NUMBER_OF_SONS;
+                }
+
+                if (maxLen == len) {
+                    *i = RADIX_TREE_NUMBER_OF_SONS;
+                }
+            }
+        }
+
+        if (*i == RADIX_TREE_NUMBER_OF_SONS) {
+            len -= pos->helper;
+            pos = pos->father;
+        } else {
+            if (pos->sons[*i] != NULL
+                && availableDigits[*i]) {
+                pos = pos->sons[*i];
+                pos->foldI = 0;
+                pos->helper = 0;
+            }
+            (*i)++;
+        }
+    }
+    return result;
 }

@@ -114,7 +114,8 @@ bool parserFinished(Parser parser) {
  */
 static int parserIsSingleCharacterOperator(int characterCode) {
     return characterCode == PARSER_OPERATOR_QM
-           || characterCode == PARSER_OPERATOR_REDIRECT;
+           || characterCode == PARSER_OPERATOR_REDIRECT
+           || characterCode == PARSER_OPERATOR_NONTRIVIAL;
 }
 
 int parserNextType(Parser parser) {
@@ -151,6 +152,8 @@ int parserReadOperator(Parser parser) {
             return PARSER_ELEMENT_TYPE_OPERATOR_QM;
         } else if (ch == PARSER_OPERATOR_REDIRECT) {
             return PARSER_ELEMENT_TYPE_OPERATOR_REDIRECT;
+        } else if (ch == PARSER_OPERATOR_NONTRIVIAL) {
+            return PARSER_ELEMENT_TYPE_OPERATOR_NONTRIVIAL;
         } else {
             parser->isError = true;
             return PARSER_FAIL;

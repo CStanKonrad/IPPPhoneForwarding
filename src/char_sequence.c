@@ -300,6 +300,24 @@ size_t charSequenceLength(CharSequence sequence) {
     return result;
 }
 
+size_t charSequenceLengthLimited(CharSequence sequence, size_t limit,
+                                 bool *greater) {
+
+    assert(limit != 0);
+    size_t result = 0;
+    CharSequenceIterator it = charSequenceGetIterator(sequence);
+
+
+    while (charSequenceNextChar(&it, NULL)) {
+        result++;
+        if (result == limit) {
+            *greater = !charSequenceIteratorEnd(&it);
+            return result;
+        }
+    }
+
+    return result;
+}
 
 const char *charSequenceToCString(CharSequence sequence) {
     size_t length = charSequenceLength(sequence);
@@ -348,4 +366,3 @@ CharSequenceIterator charSequenceSequenceEnd(CharSequence sequence) {
 char charSequenceGetChar(CharSequenceIterator *it) {
     return charSequenceIteratorGetChar(it);
 }
-

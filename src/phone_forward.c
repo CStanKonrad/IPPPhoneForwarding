@@ -9,10 +9,12 @@
 #include <assert.h>
 #include <string.h>
 #include <stdint.h>
+#include <stdio.h>
 #include "phone_forward.h"
 #include "radix_tree.h"
 #include "list.h"
 #include "text.h"
+#include "character.h"
 
 /**
  * @brief Struktura przechowująca przekierowania numerów telefonów.
@@ -337,7 +339,7 @@ static bool phfwdIsNumber(const char *num1) {
     } else {
         const char *ptr = num1;
         while (*ptr != '\0') {
-            if (!(*ptr <= '9' && *ptr >= '0')) {
+            if (!(characterIsDigit(*ptr))) {
                 return false;
             }
             ptr++;
@@ -771,5 +773,57 @@ const struct PhoneNumbers *phfwdReverse(struct PhoneForward *pf,
         return phfwdEmptySequenceResult();
     } else {
         return phfwdGetReverse(pf->backward, num);
+    }
+}
+/**
+ * @brief Wyłuskuje cyfry z ciągu set.
+ * @param[in] set - ciąg ze znakami
+ * @param[out] result - jeżeli cyfra wystąpiła w ciągu @p set
+ *       to w @p result na pozycji kod_ascii_cyfry - '0' znajduje się
+ *       wartość true, w przeciwnym razie false.
+ * @return Liczba różnych cyfr w ciągu @p set.
+ */
+static size_t phfwdNonTrivialCountExtractDigitsFromSet(const char *set,
+                                                       bool *result) {
+    size_t j;
+    for (j = 0; j < RADIX_TREE_NUMBER_OF_SONS; ++j) {
+        result[j] = false;
+    }
+
+    size_t howMany = 0;
+    const char *i;
+    for (i = set; *i != '\0'; i++) {
+        if (characterIsDigit(*i)) {
+            result[*i - '0'] = true;
+        }
+    }
+
+    for (j = 0; j < RADIX_TREE_NUMBER_OF_SONS; ++j) {
+        if (result[j]) {
+            howMany++;
+        }
+    }
+
+    return howMany;
+}
+
+size_t phfwdNonTrivialCount(struct PhoneForward *pf, const char *set, size_t len) {
+    if (pf == NULL || set == NULL || len == 0) {
+        return 0;
+    } else {
+        bool availableDigits[RADIX_TREE_NUMBER_OF_SONS];
+        size_t howManyDigitsAvailable =
+                phfwdNonTrivialCountExtractDigitsFromSet(set, availableDigits);
+
+        if (howManyDigitsAvailable == 0) {
+            return 0;
+        } else {
+            return radixTreeNonTrivialCount(pf->backward,
+                                            len,
+                                            availableDigits,
+                                            howManyDigitsAvailable);
+        }
+
+
     }
 }

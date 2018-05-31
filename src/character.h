@@ -90,7 +90,7 @@ int characterIsGraph(int characterCode);
 /**
  * @param[in] characterCode - kod znaku.
  * @return Niezerowa wartość jeżeli characterCode reprezentuje:
- * cyfrę ze zbioru {0, ..., 9}.
+ * cyfrę ze zbioru {0, ..., 9, :, ;}.
  */
 int characterIsDigit(int characterCode);
 

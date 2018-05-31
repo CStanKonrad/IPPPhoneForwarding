@@ -13,12 +13,13 @@
 #define TELEFONY_RADIX_TREE_H
 
 #include <stddef.h>
+#include <stdbool.h>
 #include "char_sequence.h"
 
 /**
  * @see RadixTreeNode
  */
-#define RADIX_TREE_NUMBER_OF_SONS 10
+#define RADIX_TREE_NUMBER_OF_SONS 12
 
 /**
  * @see radixTreeFind
@@ -85,6 +86,11 @@ struct RadixTreeNode {
      * @ref radixTreeDeleteSubTree, @ref radixTreeDelete.
      */
     size_t foldI;
+
+    /**
+     * @see radixTreeNonTrivialCount
+     */
+    size_t helper;
 
     /**
      * @brief Synowie węzła w drzewie.
@@ -271,5 +277,21 @@ char *radixGetFullText(RadixTreeNode node);
  * @param[in,out] fData - wskaźnik na dane do funkcji @p f.
  */
 void radixTreeFold(RadixTree tree, void (*f)(void *, void *), void *fData);
+
+/**
+ * @brief Funkcja licząca wynik dla  @ref phfwdNonTrivialCount
+ * z wyjątkiem uwzględnionych przez @p phfwdNonTrivialCount
+ * przypadków szczególnych.
+ * @see phfwdNonTrivialCount
+ * @param[in] tree - drzewo z informacjami pozwalającymi odwrócić przekierowanie.
+ * @param[in] goalLen - szukana długość numeru.
+ * @param[in] availableDigits - tablica z wartościami true na pozycjach
+ *       odpowiadających dostępnym cyfrom (pozycja = kod_ascii_cyfry - '0').
+ * @param[in] howManyDigitsAvailable - liczba różnych cyfr.
+ * @return Liczba nietrywialnych numerów modulo 2^(liczba_bitów_size_t).
+ */
+size_t radixTreeNonTrivialCount(RadixTree tree, size_t goalLen,
+                         const bool *availableDigits,
+                         size_t howManyDigitsAvailable);
 
 #endif //TELEFONY_RADIX_TREE_H

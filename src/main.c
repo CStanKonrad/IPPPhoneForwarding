@@ -433,6 +433,49 @@ static void readOperationReverse() {
 
 }
 
+/**
+ * @brief Obsługuje operację phfwdNonTrivialCount.
+ * Oczekuje, że poprzednio wczytano PARSER_OPERATOR_NONTRIVIAL.
+ */
+static void readOperationNonTrivial() {
+    //size_t operatorPos = parserGetReadBytes(&parser);
+    skipSkipable();
+    checkEofError();
+
+    int nextType = parserNextType(&parser);
+    checkParserError();
+
+    if (nextType == PARSER_ELEMENT_TYPE_NUMBER) {
+        if (!parserReadNumber(&parser, word1)) {
+            printErrorMessage(MEMORY_ERROR_INFIX, parserGetReadBytes(&parser));
+            exit_and_clean(ERROR_EXIT_CODE);
+        }
+        checkParserError();
+
+
+        /*if (currentBase == NULL) {
+            printErrorMessage(QM_OPERATOR_ERROR_INFIX, operatorPos);
+            exit_and_clean(ERROR_EXIT_CODE);
+        }*/
+
+        size_t len = vectorSize(word1);
+        if (len <= 12) {
+            len = 0;
+        } else {
+            len -= 12;
+        }
+        makeVectorCStringCompatible(word1);
+        size_t result = phfwdNonTrivialCount(currentBase, vectorBegin(word1), len);
+
+        fprintf(stdout, "%zu\n", result);
+
+
+    } else {
+        printErrorMessage(BASIC_ERROR_INFIX, parserGetReadBytes(&parser) + 1);
+        exit_and_clean(ERROR_EXIT_CODE);
+    }
+}
+
 
 /**
  * @brief Obsługuje operację phfwdGet(word1).
@@ -527,6 +570,8 @@ static void readOperation(int nextType) {
 
         if (operator == PARSER_ELEMENT_TYPE_OPERATOR_QM) {
             readOperationReverse();
+        } else if (operator == PARSER_ELEMENT_TYPE_OPERATOR_NONTRIVIAL) {
+            readOperationNonTrivial();
         } else {
             printErrorMessage(BASIC_ERROR_INFIX, parserGetReadBytes(&parser));
             exit_and_clean(ERROR_EXIT_CODE);
@@ -554,7 +599,6 @@ static void readOperation(int nextType) {
             } else if (operator == PARSER_ELEMENT_TYPE_OPERATOR_REDIRECT) {
                 checkEofError();
                 readOperatorRedirectWord1();
-                //todo
             } else {
                 printErrorMessage(BASIC_ERROR_INFIX,
                                   parserGetReadBytes(&parser) + 1);
@@ -582,7 +626,7 @@ static void readOperation(int nextType) {
  */
 int main() {
     initProgram();
-    
+    //freopen("bigtest0.in", "r", stdin);
     while (true) {
         loopStepClear();
         skipSkipable();

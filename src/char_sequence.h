@@ -125,6 +125,18 @@ bool charSequenceNextChar(CharSequenceIterator *it, char *ch);
  */
 size_t charSequenceLength(CharSequence sequence);
 
+
+/**
+ * @brief Liczba elementów w ciągu @p sequence.
+ * @param[in] sequence - wskaźnik na ciąg znaków.
+ * @param[in] limit - limit liczenia długości.
+ * @param[out] greater - true jeżeli ciąg jest dłuższy niż limit
+ *       false w przeciwnym przypadku.
+ * @return min(Liczba elementów w ciągu @p sequence, limit)
+ */
+size_t charSequenceLengthLimited(CharSequence sequence, size_t limit,
+                                 bool *greater);
+
 /**
  * @brief Ciąg znaków w stylu C.
  * @remarks Wynik należy zwolnić przy pomocy free.
@@ -148,5 +160,6 @@ bool charSequenceEqualToString(CharSequence sequence, const char *str);
  * @return Wskaźnik reprezentujący koniec @p sequence.
  */
 CharSequenceIterator charSequenceSequenceEnd(CharSequence sequence);
+
 
 #endif //TELEFONY_CAHR_SEQUENCE_H

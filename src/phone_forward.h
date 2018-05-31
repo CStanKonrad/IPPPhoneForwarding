@@ -107,4 +107,19 @@ void phnumDelete(const struct PhoneNumbers *pnum);
  */
 const char *phnumGet(const struct PhoneNumbers *pnum, size_t idx);
 
+/**
+ * Funkcja oblicza liczbę nietrywialnych numerów długości @p len zawierających
+ * tylko cyfry, które znajdują się w napisie @p set. Jeśli wskaźnik @p pf ma wartość
+ * NULL, @p set ma wartość NULL, @p set jest pusty, @p set nie zawiera żadnej cyfry
+ * lub parametr @p len jest równy zeru, wynikiem jest zero.
+ * Obliczenia wykonywane są modulo dwa do potęgi liczba bitów reprezentacji typu
+ * size_t.
+ * @param[in] pf - wskaźnik na strukturę przechowującą przekierowania numerów;
+ * @param[in] set - wskaźnik na napis zawierający dozwolone cyfry.
+ * @param[in] len - maksymalna długość numeru.
+ * @return Liczba nietrywialnych numerów.
+ */
+size_t phfwdNonTrivialCount(struct PhoneForward *pf, const char *set, size_t len);
+
+
 #endif /* TELEFONY_PHONE_FORWARD_H */
