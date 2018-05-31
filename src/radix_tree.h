@@ -76,6 +76,11 @@ struct RadixTreeNode {
     CharSequence txt;
 
     /**
+     * @brief Długość @p txt.
+     */
+    size_t txtLength;
+
+    /**
      * @brief Dane przechowywane przez węzeł.
      */
     void *data;

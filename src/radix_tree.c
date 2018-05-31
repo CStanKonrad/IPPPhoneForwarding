@@ -14,6 +14,7 @@
 #include <stdio.h>
 #include "radix_tree.h"
 #include "text.h"
+#include "stdfunc.h"
 
 /**
  * @brief Kod operacji zakończonej sukcesem.
@@ -39,6 +40,7 @@ int radixTreeIsRoot(RadixTreeNode node) {
 static void radixTreeInitNode(RadixTreeNode node) {
     node->data = NULL;
     node->txt = NULL;
+    node->txtLength = 0;
 
     node->father = NULL;
 
@@ -60,6 +62,7 @@ static void radixTreeFreeNode(RadixTreeNode node) {
     assert(node->data == NULL);
     if (node->txt != NULL) {
         charSequenceDelete(node->txt);
+        node->txtLength = 0;
         node->txt = NULL;
     }
     free(node);
@@ -81,6 +84,7 @@ static int radixTreeInitTree(RadixTree tree) {
     if (tree->txt == NULL) {
         return RADIX_TREE_OPERATION_FAIL;
     } else {
+        tree->txtLength = charSequenceLength(tree->txt);
         return RADIX_TREE_OPERATION_SUCCESS;
     }
 }
@@ -349,7 +353,8 @@ int radixTreeFind(RadixTree tree, const char *txt, RadixTreeNode *ptr,
     int result = radixTreeFindEx(tree, txt, ptr, txtMatchPtr, &nodeMatchPtr);
 
     if (charSequenceGetChar(&nodeMatchPtr) == '\0') {
-        *nodeMatch = charSequenceLength((*ptr)->txt);
+        assert((*ptr)->txtLength == charSequenceLength((*ptr)->txt));
+        *nodeMatch = (*ptr)->txtLength;
         *nodeMatchMode = RADIX_TREE_NODE_MATCH_FULL;
     } else {
         *nodeMatch = radixTreeHowManyCharsOffset(*ptr, &nodeMatchPtr);
@@ -360,7 +365,8 @@ int radixTreeFind(RadixTree tree, const char *txt, RadixTreeNode *ptr,
 
 
 size_t radixTreeHowManyChars(RadixTreeNode node) {
-    return charSequenceLength(node->txt);
+    assert(charSequenceLength(node->txt) == node->txtLength);
+    return node->txtLength;
 }
 
 /**
@@ -384,8 +390,13 @@ static int radixTreeSplitNode(RadixTreeNode node, CharSequenceIterator *splitPtr
         newNode->txt = node->txt;
 
         CharSequence ptr = charSequenceSplitByIterator(node->txt, splitPtr);
+        newNode->txtLength = charSequenceLength(newNode->txt);
 
         node->txt = ptr;
+        node->txtLength -= newNode->txtLength;
+
+        assert(charSequenceLength(node->txt) == node->txtLength);
+        assert(charSequenceLength(newNode->txt) == newNode->txtLength);
 
         newNode->father = node->father;
         CharSequenceIterator it = charSequenceGetIterator(newNode->txt);
@@ -418,6 +429,7 @@ static RadixTreeNode radixTreeInsertLeaf(RadixTreeNode node, const char *txt) {
             return NULL;
         } else {
             newNode->txt = textToInsert;
+            newNode->txtLength = charSequenceLength(textToInsert);
 
             newNode->father = node;
             CharSequenceIterator it = charSequenceGetIterator(newNode->txt);
@@ -549,9 +561,14 @@ static RadixTreeNode radixTreeFirstSon(RadixTreeNode node) {
  */
 static int radixTreeMerge(RadixTreeNode a, RadixTreeNode b) {
     assert(charSequenceLength(b->txt) != 0);
+    assert(charSequenceLength((b->txt)) == b->txtLength);
+    assert(charSequenceLength((a->txt)) == a->txtLength);
+
     charSequenceMerge(a->txt, b->txt);
     b->txt = a->txt;
+    b->txtLength += a->txtLength;
     a->txt = NULL;
+    a->txtLength = 0;
 
     assert(charSequenceLength(b->txt) != 0);
 
@@ -619,7 +636,8 @@ char *radixGetFullText(RadixTreeNode node) {
         result[length] = '\0';
         pos = node;
         while (!radixTreeIsRoot(pos)) {
-            size_t len = charSequenceLength(pos->txt);
+            assert(pos->txtLength == charSequenceLength(pos->txt));
+            size_t len = pos->txtLength;
             size_t i;
             length -= len;
             CharSequenceIterator ptr = charSequenceGetIterator(pos->txt);
@@ -707,7 +725,7 @@ static bool radixTreeNonTrivialCountCheck(CharSequence seq,
     CharSequenceIterator it = charSequenceGetIterator(seq);
     char ch;
     while (charSequenceNextChar(&it, &ch)) {
-        if (!availableDigits[ch -'0']) {
+        if (!availableDigits[ch - '0']) {
             return false;
         }
     }
@@ -734,8 +752,17 @@ size_t radixTreeNonTrivialCount(RadixTree tree, size_t maxLen,
 
         if (*i == 0 && pos != tree) {
             bool isGreater = false;
-            pos->helper = charSequenceLengthLimited(pos->txt, maxLen - len,
-                                                &isGreater);
+            assert(charSequenceLengthLimited(pos->txt, maxLen - len,
+                                             &isGreater)
+                   == MIN(pos->txtLength, maxLen - len));
+
+            pos->helper = MIN(pos->txtLength, maxLen - len);
+            if (pos->txtLength > maxLen - len) {
+                isGreater = true;
+            } else {
+                isGreater = false;
+            }
+
             len += pos->helper;
             assert(len <= maxLen);
             if (isGreater
@@ -744,7 +771,7 @@ size_t radixTreeNonTrivialCount(RadixTree tree, size_t maxLen,
             } else {
                 if (pos->data != NULL) {
                     result += radixTreeNonTrivialCountCount(maxLen - len,
-                                                  howManyDigitsAvailable);
+                                                            howManyDigitsAvailable);
                     *i = RADIX_TREE_NUMBER_OF_SONS;
                 }
 
