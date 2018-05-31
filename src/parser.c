@@ -22,12 +22,12 @@ struct Parser parserCreateNew() {
 
 /**
  * @param[in] characterCode - kod znaku
- * @return Niezerowa wartoś jeżeli @p characterCode
+ * @return Niezerowa wartość jeżeli @p characterCode
  *         reprezentuje znak biały lub znak nowej lini.
  */
 static int parserCharacterCanBeSkipped(int characterCode) {
     return characterIsWhite(characterCode)
-            || characterIsNewLine(characterCode);
+           || characterIsNewLine(characterCode);
 }
 
 /**
@@ -36,6 +36,7 @@ static int parserCharacterCanBeSkipped(int characterCode) {
  * @param[in, out] parser - wskaźnik na strukturę reprezentującą stan parsowania.
  *       Po wykonaniu @p parser zostaje uaktualniony.
  * @return true jeżeli coś zostało pominięte false w przeciwnym przypadku.
+ * @remarks Nie robi nic jeżeli funkcja @p parserFinished(parser) zwraca true.
  */
 static bool parserSkipCharactersThatCanBeSkipped(Parser parser) {
     if (parserFinished(parser)) {
@@ -52,10 +53,11 @@ static bool parserSkipCharactersThatCanBeSkipped(Parser parser) {
  * @param[in, out] parser - wskaźnik na strukturę reprezentującą stan parsowania.
  *       Po wykonaniu @p parser zostaje uaktualniony.
  * @return true jeżeli coś zostało pominięte false w przeciwnym przypadku.
+ * @remarks Nie robi nic jeżeli funkcja @p parserFinished(parser) zwraca true.
  */
 static bool parserSkipComments(Parser parser) {
     if (parserFinished(parser)
-            || inputPeekCharacter() != PARSER_COMMENT_SEQUENCE[0]) {
+        || inputPeekCharacter() != PARSER_COMMENT_SEQUENCE[0]) {
         return false;
     }
 
@@ -82,7 +84,7 @@ static bool parserSkipComments(Parser parser) {
             parser->isCommentEofError = true;
             return false;
         } else if (r == PARSER_COMMENT_SEQUENCE[0]
-                && inputPeekCharacter() == PARSER_COMMENT_SEQUENCE[1]) {
+                   && inputPeekCharacter() == PARSER_COMMENT_SEQUENCE[1]) {
             inputGetCharacter();
             parser->readBytes++;
 
@@ -180,8 +182,8 @@ int parserReadOperator(Parser parser) {
         }
 
         if (!parserCharacterCanBeSkipped(inputPeekCharacter())
-                && (inputPeekCharacter() != PARSER_COMMENT_SEQUENCE[0])
-                && !(parserIsSingleCharacterOperator(inputPeekCharacter()))) {
+            && (inputPeekCharacter() != PARSER_COMMENT_SEQUENCE[0])
+            && !(parserIsSingleCharacterOperator(inputPeekCharacter()))) {
             parser->isError = true;
             parser->readBytes = startPos;
             return PARSER_FAIL;
@@ -206,14 +208,6 @@ bool parserReadIdentificator(Parser parser, Vector destination) {
     int readStatus = inputReadWhile(parserIsLetterOrDigit, SIZE_MAX, destination);
     parser->readBytes += vectorSize(destination) - prefSize;
 
-
-    //parser->readBytes++;
-    /*if (!parserCharacterCanBeSkipped(inputPeekCharacter())
-            && !parserFinished(parser)
-            && !parserIsSingleCharacterOperator(inputPeekCharacter())) {
-        parser->isError = true;
-    }*/
-
     return readStatus == INPUT_READ_SUCCESS;
 }
 
@@ -221,12 +215,6 @@ bool parserReadNumber(Parser parser, Vector destination) {
     size_t prefSize = vectorSize(destination);
     int readStatus = inputReadWhile(characterIsDigit, SIZE_MAX, destination);
     parser->readBytes += vectorSize(destination) - prefSize;
-
-    /*if (!parserCharacterCanBeSkipped(inputPeekCharacter())
-        && !parserFinished(parser)
-            && !parserIsSingleCharacterOperator(inputPeekCharacter())) {
-        parser->isError = true;
-    }*/
 
     return readStatus == INPUT_READ_SUCCESS;
 }

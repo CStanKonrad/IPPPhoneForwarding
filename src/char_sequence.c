@@ -27,7 +27,7 @@ struct CharSequence {
 
 /**
  * @brief inicjuje węzeł ciągu znaków.
- * @param[in] node - wskaźnik na węzeł.
+ * @param[in, out] node - wskaźnik na węzeł.
  * @param[in] letter - znak który ma być przechowywany w węźle.
  */
 static void charSequenceInitNewNode(CharSequence node, char letter) {
@@ -143,7 +143,7 @@ bool charSequenceEqualToString(CharSequence sequence, const char *str) {
 }
 
 CharSequence charSequenceSequenceEnd(CharSequence sequence) {
-    (void)sequence;
+    (void) sequence;
     return NULL;
 }
 

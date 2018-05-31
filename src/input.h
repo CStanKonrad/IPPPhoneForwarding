@@ -145,7 +145,6 @@ int inputReadUntil(int (*predicate)(int),
                    size_t maxLength, Vector destination);
 
 
-
 /**
  * @return Niezerowa wartość jeżeli znak końca wejścia został napotkany,
  *         lub jest następnym w kolei znakiem.

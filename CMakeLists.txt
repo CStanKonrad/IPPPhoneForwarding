@@ -23,7 +23,6 @@ set(CMAKE_C_FLAGS "-std=c11 -Wall -Wextra")
 set(SOURCE_FILES
     src/phone_forward.c 
     src/phone_forward.h
-    src/phone_forward_example.c
     src/list.h
     src/list.c
     src/radix_tree.h
@@ -38,7 +37,12 @@ set(SOURCE_FILES
     src/character.c
     src/vector.h
     src/vector.c
-    src/stdfunc.h src/parser.c src/parser.h src/phone_bases_system.c src/phone_bases_system.h src/main.c)
+    src/stdfunc.h 
+    src/parser.c
+    src/parser.h
+    src/phone_bases_system.c
+    src/phone_bases_system.h
+    src/main.c)
 
 # Wskazujemy plik wykonywalny.
 add_executable(phone_forward ${SOURCE_FILES})

@@ -126,8 +126,8 @@ struct PhoneForward *phfwdNew(void) {
 static void phfwdForwardJustDelete(void *ptrA, void *ptrB) {
     assert(ptrA != NULL);
     assert(ptrB == NULL);
-    (void)ptrA;
-    (void)ptrB;
+    (void) ptrA;
+    (void) ptrB;
     free(ptrA);
 }
 
@@ -141,8 +141,8 @@ static void phfwdForwardJustDelete(void *ptrA, void *ptrB) {
 static void phfwdBackwardJustDelete(void *ptrA, void *ptrB) {
     assert(ptrA != NULL);
     assert(ptrB == NULL);
-    (void)ptrA;
-    (void)ptrB;
+    (void) ptrA;
+    (void) ptrB;
     listDestroy(ptrA);
 }
 
@@ -371,7 +371,7 @@ bool phfwdAdd(struct PhoneForward *pf, const char *num1, const char *num2) {
 static void phfwdRemoveCleaner(void *data, void *backwardTree) {
     assert(data != NULL);
     assert(backwardTree != NULL);
-    (void)backwardTree;
+    (void) backwardTree;
     ForwardData fd = (ForwardData) data;
     phfwdDeleteNodeFromBackwardTree(fd);
     free(fd);

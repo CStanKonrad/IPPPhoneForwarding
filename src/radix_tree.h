@@ -169,7 +169,7 @@ int radixTreeFindLite(RadixTree tree, const char *txt, RadixTreeNode *ptr);
 /**
  * @brief Sprawia że w drzewie powstaje ścieżka reprezentująca numer @p txt.
  * @see radixGetFullText
- * @param[in] tree - wskaźnik na drzewo.
+ * @param[in, out] tree - wskaźnik na drzewo.
  * @param[in] txt - wskaźnik na tekst reprezentujący numer.
  * @return Wskaźnik do węzła dla którego wywołanie
  *         radixGetFullText zwróci @p txt,
@@ -200,7 +200,7 @@ void radixTreeCountDataFunction(void *ptrA, void *ptrB);
  * Usuwa poddrzewo reprezentowane przez @p subTreeNode
  * wywołując dla węzłów z przypisanymi danymi
  * f(wskaźnik_na_dane_przechowywane_przez_węzeł, fData).
- * @param[in] subTreeNode - wskaźnik na węzeł drzewa.
+ * @param[in, out] subTreeNode - wskaźnik na węzeł drzewa.
  * @param[in] f - wskaźnik na funkcję czyszczącą.
  * @param fData - dane pomocnicze do funkcji czyszczącej.
  */
@@ -212,7 +212,7 @@ void radixTreeDeleteSubTree(RadixTreeNode subTreeNode,
  * @brief Usuwa drzewo.
  * Usuwa @p tree wywołując dla węzłów z przypisanymi danymi
  * f(wskaźnik_na_dane_przechowywane_przez_węzeł, fData).
- * @param[in] tree - wskaźnik na drzewo.
+ * @param[in, out] tree - wskaźnik na drzewo.
  * @param[in] f - wskaźnik na funkcję czyszczącą.
  * @param fData - dane pomocnicze do funkcji czyszczącej.
  */
@@ -230,7 +230,7 @@ void *radixTreeGetNodeData(RadixTreeNode node);
  * @brief Przypisuje dane do węzła
  * Sprawia że węzeł @p node posiada wskaźnik na dane wskazywane przez
  * @p ptr.
- * @param[in] node - wskaźnik na węzeł.
+ * @param[in, out] node - wskaźnik na węzeł.
  * @param[in] ptr - wskaźnik na dane.
  */
 void radixTreeSetData(RadixTreeNode node, void *ptr);
@@ -266,7 +266,7 @@ char *radixGetFullText(RadixTreeNode node);
  * Przechodzi po węzłach drzewa @p tree w porządku leksykograficznym
  * względem przechowywanego tekstu i na każdym węźle przechowującym jakieś dane
  * wywołuje f(dane_węzła, fData).
- * @param[in] tree - wskaźnik na drzewo.
+ * @param[in, out] tree - wskaźnik na drzewo.
  * @param[in] f - wskaźnik na funkcję przetwarzającą.
  * @param[in,out] fData - wskaźnik na dane do funkcji @p f.
  */

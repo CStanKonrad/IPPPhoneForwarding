@@ -6,8 +6,8 @@
  * @date 09.04.2018
  */
 
-#ifndef __PHONE_FORWARD_H__
-#define __PHONE_FORWARD_H__
+#ifndef TELEFONY_PHONE_FORWARD_H
+#define TELEFONY_PHONE_FORWARD_H
 
 #include <stdbool.h>
 #include <stddef.h>
@@ -42,7 +42,7 @@ void phfwdDelete(struct PhoneForward *pf);
  * w których ten prefiks zamieniono odpowiednio na prefiks @p num2. Każdy numer
  * jest swoim własnym prefiksem. Jeśli wcześniej zostało dodane przekierowanie
  * z takim samym parametrem @p num1, to jest ono zastępowane.
- * @param[in] pf   – wskaźnik na strukturę przechowującą przekierowania numerów;
+ * @param[in, out] pf   – wskaźnik na strukturę przechowującą przekierowania numerów;
  * @param[in] num1 – wskaźnik na napis reprezentujący prefiks numerów
  *                   przekierowywanych;
  * @param[in] num2 – wskaźnik na napis reprezentujący prefiks numerów, na które
@@ -59,7 +59,7 @@ bool phfwdAdd(struct PhoneForward *pf, const char *num1, const char *num2);
  * parametru @p num1 użytego przy dodawaniu. Jeśli nie ma takich przekierowań
  * lub napis nie reprezentuje numeru, nic nie robi.
  *
- * @param[in] pf  – wskaźnik na strukturę przechowującą przekierowania numerów;
+ * @param[in, out] pf  – wskaźnik na strukturę przechowującą przekierowania numerów;
  * @param[in] num – wskaźnik na napis reprezentujący prefiks numerów.
  */
 void phfwdRemove(struct PhoneForward *pf, const char *num);
@@ -107,4 +107,4 @@ void phnumDelete(const struct PhoneNumbers *pnum);
  */
 const char *phnumGet(const struct PhoneNumbers *pnum, size_t idx);
 
-#endif /* __PHONE_FORWARD_H__ */
+#endif /* TELEFONY_PHONE_FORWARD_H */

@@ -110,8 +110,8 @@ int inputReadWhile(int (*predicate)(int),
 
     while ((*predicate)(inputPeekCharacter())
            && readBytes < maxLength) {
-        if (vectorPushBack(destination, (char)inputGetCharacter())
-                != VECTOR_SUCCES)  {
+        if (vectorPushBack(destination, (char) inputGetCharacter())
+            != VECTOR_SUCCES) {
             return INPUT_READ_FAIL;
         }
 
@@ -126,8 +126,8 @@ int inputReadUntil(int (*predicate)(int),
 
     while (!(*predicate)(inputPeekCharacter())
            && readedBytes < maxLength) {
-        if (vectorPushBack(destination, (char)inputGetCharacter())
-            != VECTOR_SUCCES)  {
+        if (vectorPushBack(destination, (char) inputGetCharacter())
+            != VECTOR_SUCCES) {
             return INPUT_READ_FAIL;
         }
 

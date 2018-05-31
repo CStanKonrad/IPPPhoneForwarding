@@ -76,6 +76,7 @@ Vector vectorCreate() {
         return newVector;
     }
 }
+
 /**
  * @brief Optymalizuje pamięć zajmowaną przez Vector.
  * @param vector    - wskaźnik na strukturę Vectora

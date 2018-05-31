@@ -506,8 +506,8 @@ void radixTreeDelete(RadixTree tree, void (*f)(void *, void *), void *fData) {
 }
 
 void radixTreeEmptyDelFunction(void *ptrA, void *ptrB) {
-    (void)ptrA;
-    (void)ptrB;
+    (void) ptrA;
+    (void) ptrB;
 }
 
 void *radixTreeGetNodeData(RadixTreeNode node) {

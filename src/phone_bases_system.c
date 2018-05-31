@@ -33,7 +33,7 @@ static size_t phoneBasesHashId(const char *id) {
 
     while (*ptr != '\0') {
         result = ((result * PHONE_BASES_HASH_BASE) + (*ptr))
-                % PHONE_BASES_HASH_MOD;
+                 % PHONE_BASES_HASH_MOD;
         ptr++;
     }
 
@@ -58,7 +58,7 @@ static int phoneBasesInfoEqualId(PhoneBaseInfo pbi, const char *id, size_t hash)
  * @param[in] pbn - wskaźnik na usuwany węzeł.
  */
 static void phoneBasesFreeNode(PhoneBasesNode pbn) {
-    free((void*)pbn->baseInfo.id);
+    free((void *) pbn->baseInfo.id);
     phfwdDelete(pbn->baseInfo.base);
     free(pbn);
 }
@@ -118,8 +118,8 @@ struct PhoneForward *phoneBasesGetBase(PhoneBases pb, const char *id) {
 }
 
 
-struct PhoneForward* phoneBasesAddBase(PhoneBases pb, const char *id) {
-    struct PhoneForward* result;
+struct PhoneForward *phoneBasesAddBase(PhoneBases pb, const char *id) {
+    struct PhoneForward *result;
 
     result = phoneBasesGetBase(pb, id);
 

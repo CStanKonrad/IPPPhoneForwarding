@@ -10,8 +10,10 @@
 #define TELEFONY_PARSER_H
 
 #include <stdbool.h>
+#include <stddef.h>
 
 #include "vector.h"
+#include "stdfunc.h"
 
 /**
  * @brief Ciąg znaków rozpoczynający i kończący komentarz.
@@ -19,14 +21,24 @@
 #define PARSER_COMMENT_SEQUENCE "$$"
 
 /**
+ * @brief Ciąg znaków reprezentujący operator ?.
+ */
+#define PARSER_OPERATOR_QM_STRING "?"
+
+/**
  * @brief Znak odpowiadający operatorowi ?.
  */
-#define PARSER_OPERATOR_QM '?'
+#define PARSER_OPERATOR_QM (STRING_TO_CHAR(PARSER_OPERATOR_QM_STRING))
+
+/**
+ * @brief Ciąg znaków reprezentujący operator przekierowania.
+ */
+#define PARSER_OPERATOR_REDIRECT_STRING ">"
 
 /**
  * @brief Znak odpowiadający operatorowi przekierowania.
  */
-#define PARSER_OPERATOR_REDIRECT '>'
+#define PARSER_OPERATOR_REDIRECT (STRING_TO_CHAR(PARSER_OPERATOR_REDIRECT_STRING))
 
 /**
  * @brief Ciąg znaków odpowiadający operatorowi stworzenia nowej bazy.
@@ -86,7 +98,7 @@
 /**
  * @see struct Parser
  */
-typedef struct Parser* Parser;
+typedef struct Parser *Parser;
 
 /**
  * @brief Struktura reprezentująca stan parsowania wejścia.
@@ -147,7 +159,8 @@ bool parserFinished(Parser parser);
  *         PARSER_ELEMENT_TYPE_SINGLE_CHARACTER_OPERATOR
  *         (PARSER_OPERATOR_QM lub PARSER_OPERATOR_REDIRECT),
  *         PARSER_FAIL (coś innego).
- * @remarks W przypadku PARSER_FAIL następny znak z wejścia zostaje wczytany,
+ * @remarks W przypadku PARSER_FAIL następny znak z wejścia zostaje wczytany
+ *          (ustawiona zostaje także flaga dotycząca błędu w @p parser),
  *          w przeciwnym przypadku nie.
  */
 int parserNextType(Parser parser);
@@ -161,7 +174,8 @@ int parserNextType(Parser parser);
  *         PARSER_ELEMENT_TYPE_OPERATOR_REDIRECT (PARSER_OPERATOR_REDIRECT),
  *         PARSER_ELEMENT_TYPE_OPERATOR_NEW (PARSER_OPERATOR_NEW),
  *         PARSER_ELEMENT_TYPE_OPERATOR_DELETE (PARSER_OPERATOR_DELETE)
- *         PARSER_FAIL (Nieznany operator).
+ *         PARSER_FAIL (Nieznany operator
+ *         lub @p parserFinished(parser) zwraca true).
  */
 int parserReadOperator(Parser parser);
 
@@ -170,7 +184,7 @@ int parserReadOperator(Parser parser);
  * @param[in, out] parser - wskaźnik na strukturę reprezentującą stan parsowania.
  *       Po wykonaniu @p parser zostaje uaktualniony.
  * @param[out] destination - do podanego wektora zapisuje identyfikator.
- * @return false w przypadku problemów z wczytywaniem / pamięcią,
+ * @return false w przypadku problemów z pamięcią,
  *         true w przeciwnym wypadku.
  */
 bool parserReadIdentificator(Parser parser, Vector destination);
@@ -181,7 +195,7 @@ bool parserReadIdentificator(Parser parser, Vector destination);
  * @param[in, out] parser - wskaźnik na strukturę reprezentującą stan parsowania.
  *       Po wykonaniu @p parser zostaje uaktualniony.
  * @param[out] destination - do podanego wektora zapisuje numer.
- * @return false w przypadku problemów z wczytywaniem / pamięcią,
+ * @return false w przypadku problemów z pamięcią,
  *         true w przeciwnym wypadku.
  */
 bool parserReadNumber(Parser parser, Vector destination);

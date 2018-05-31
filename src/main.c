@@ -16,6 +16,7 @@
 #include "vector.h"
 #include "input.h"
 #include "character.h"
+#include "stdfunc.h"
 
 /**
  * @brief Bazowy prefiks informacji o błędzie.
@@ -40,17 +41,20 @@
 /**
  * @brief Infiks informacji o błędzie operatora DEL.
  */
-#define DEL_OPERATOR_ERROR_INFIX " DEL "
+#define DEL_OPERATOR_ERROR_INFIX \
+    (CONCAT(" ", PARSER_OPERATOR_DELETE, " "))
 
 /**
  * @brief Infiks informacji o błędzie operatora ?.
  */
-#define QM_OPERATOR_ERROR_INFIX " ? "
+#define QM_OPERATOR_ERROR_INFIX \
+    (CONCAT(" ", PARSER_OPERATOR_QM_STRING, " "))
 
 /**
  * @brief Infiks informacji o błędzie operatora >.
  */
-#define REDIRECT_OPERATOR_ERROR_SUFFIX " > "
+#define REDIRECT_OPERATOR_ERROR_SUFFIX \
+    (CONCAT(" ", PARSER_OPERATOR_REDIRECT_STRING, " "))
 
 
 /**
@@ -63,7 +67,10 @@
  */
 #define SUCCESS_EXIT_CODE 0
 
-//todo 2?
+/**
+ * Przesunięcie pozycji błędu operatora PARSER_OPERATOR_[NEW/DELETE]
+ * przy użyciu nazwy zastrzeżonej (PARSER_OPERATOR_[NEW/DELETE]).
+ */
 #define OPERATOR_POSITION_OFFSET 2
 
 /**
@@ -72,12 +79,12 @@
 static PhoneBases bases = NULL;
 
 /**
- * @brief Wskaźniki na wektor pomocniczy do buforowania wejścia.
+ * @brief Wskaźniki na pomocniczy wektor do buforowania wejścia.
  */
 static Vector word1 = NULL;
 
 /**
- * @brief Wskaźniki na wektor pmocniczy do buforowania wejścia.
+ * @brief Wskaźniki na pomocniczy wektor do buforowania wejścia.
  */
 static Vector word2 = NULL;
 
@@ -169,7 +176,7 @@ static void initProgram() {
  * @brief Dodaje do Vectora '\0' na koniec.
  * W przypadku problemów z pamięcią kończy program
  * i wypisuje informacje o błędzie.
- * @param[in] v - dany Vectora.
+ * @param[in] v - dany Vector.
  */
 static void makeVectorCStringCompatible(Vector v) {
     if (!vectorPushBack(v, '\0')) {
@@ -264,7 +271,8 @@ static void readOperationNew() {
 
     if (strcmp(vectorBegin(word1), PARSER_OPERATOR_DELETE) == 0
         || strcmp(vectorBegin(word1), PARSER_OPERATOR_NEW) == 0) {
-        printErrorMessage(BASIC_ERROR_INFIX, parserGetReadBytes(&parser) - OPERATOR_POSITION_OFFSET);
+        printErrorMessage(BASIC_ERROR_INFIX,
+                          parserGetReadBytes(&parser) - OPERATOR_POSITION_OFFSET);
         exit_and_clean(ERROR_EXIT_CODE);
     }
 
@@ -325,7 +333,8 @@ static void readOperationDeleteBase(size_t operatorPos) {
 
     if (strcmp(vectorBegin(word1), PARSER_OPERATOR_DELETE) == 0
         || strcmp(vectorBegin(word1), PARSER_OPERATOR_NEW) == 0) {
-        printErrorMessage(BASIC_ERROR_INFIX, parserGetReadBytes(&parser) - OPERATOR_POSITION_OFFSET);
+        printErrorMessage(BASIC_ERROR_INFIX,
+                          parserGetReadBytes(&parser) - OPERATOR_POSITION_OFFSET);
         exit_and_clean(ERROR_EXIT_CODE);
     }
 
@@ -349,7 +358,8 @@ static void readOperationDeleteBase(size_t operatorPos) {
  * Oczekuje, że poprzednio wczytano operator PARSER_OPERATOR_DELETE.
  */
 static void readOperationDelete() {
-    size_t operatorPos = parserGetReadBytes(&parser) - strlen(PARSER_OPERATOR_DELETE) + 1;
+    size_t operatorPos =
+            parserGetReadBytes(&parser) - strlen(PARSER_OPERATOR_DELETE) + 1;
     skipSkipable();
     checkEofError();
 
@@ -403,7 +413,8 @@ static void readOperationReverse() {
             exit_and_clean(ERROR_EXIT_CODE);
         }
         makeVectorCStringCompatible(word1);
-        const struct PhoneNumbers *numbers = phfwdReverse(currentBase, vectorBegin(word1));
+        const struct PhoneNumbers *numbers
+                = phfwdReverse(currentBase, vectorBegin(word1));
 
         if (numbers == NULL) {
             printErrorMessage(MEMORY_ERROR_INFIX, parserGetReadBytes(&parser));
@@ -448,7 +459,9 @@ static void readOperatorGetFromWord1() {
 }
 
 /**
- * @brief Obsługuje operację przekierowania numerów.
+ * @brief Obsługuje operację przekierowania numerów word1 > word2.
+ * Oczekuje wczytania pierwszego numeru do word1
+ * i wczytania operatora przekierowania.
  */
 static void readOperatorRedirectWord1() {
     size_t operatorPos = parserGetReadBytes(&parser);
@@ -489,7 +502,8 @@ static void readOperatorRedirectWord1() {
 
 /**
  * @brief Wczytuje operację / jej fragment i obsługuje ją.
- * @param[in] nextType - oczekiwany typ wczytanych danych.
+ * @param[in] nextType - oczekiwany typ wczytanych danych,
+ *       pochodzący z wywołania @ref parserNextType.
  */
 static void readOperation(int nextType) {
     if (nextType == PARSER_ELEMENT_TYPE_WORD) {
@@ -498,7 +512,6 @@ static void readOperation(int nextType) {
         checkEofError();
 
         if (operator == PARSER_ELEMENT_TYPE_OPERATOR_NEW) {
-            //fprintf(stderr, "%d\n", parserGetReadBytes(&parser));
             readOperationNew();
         } else if (operator == PARSER_ELEMENT_TYPE_OPERATOR_DELETE) {
             readOperationDelete();
@@ -543,19 +556,22 @@ static void readOperation(int nextType) {
                 readOperatorRedirectWord1();
                 //todo
             } else {
-                printErrorMessage(BASIC_ERROR_INFIX, parserGetReadBytes(&parser) + 1);
+                printErrorMessage(BASIC_ERROR_INFIX,
+                                  parserGetReadBytes(&parser) + 1);
                 exit_and_clean(ERROR_EXIT_CODE);
             }
 
 
         } else {
-            printErrorMessage(BASIC_ERROR_INFIX, parserGetReadBytes(&parser) + 1);
+            printErrorMessage(BASIC_ERROR_INFIX,
+                              parserGetReadBytes(&parser) + 1);
             exit_and_clean(ERROR_EXIT_CODE);
         }
 
 
     } else {
-        printErrorMessage(BASIC_ERROR_INFIX, parserGetReadBytes(&parser) + 1);
+        printErrorMessage(BASIC_ERROR_INFIX,
+                          parserGetReadBytes(&parser) + 1);
         exit_and_clean(ERROR_EXIT_CODE);
     }
 }
@@ -566,7 +582,6 @@ static void readOperation(int nextType) {
  */
 int main() {
     initProgram();
-    //freopen("in.txt","r",stdin);
 
     while (true) {
         loopStepClear();

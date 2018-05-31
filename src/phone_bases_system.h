@@ -10,6 +10,7 @@
 #define TELEFONY_PHONE_BASES_SYSTEM_H
 
 #include <stdbool.h>
+#include <stddef.h>
 
 #include "phone_forward.h"
 
@@ -22,12 +23,12 @@ typedef struct PhoneBaseInfo PhoneBaseInfo;
 /**
  * @see struct PhoneBases
  */
-typedef struct PhoneBases* PhoneBases;
+typedef struct PhoneBases *PhoneBases;
 
 /**
  * @see struct PhoneBasesNode
  */
-typedef struct PhoneBasesNode* PhoneBasesNode;
+typedef struct PhoneBasesNode *PhoneBasesNode;
 
 /**
  * @brief Informacje o bazie przekierowań.
@@ -113,7 +114,7 @@ size_t phoneBasesHowManyBases(PhoneBases pb);
  * @return Wskaźnik na bazę o identyfikatorze id, NULL w przypadku
  *         braku takiej bazy.
  */
-struct PhoneForward* phoneBasesGetBase(PhoneBases pb, const char *id);
+struct PhoneForward *phoneBasesGetBase(PhoneBases pb, const char *id);
 
 /**
  * @brief Dodaje bazę i zwraca wskaźnik do niej.
@@ -122,7 +123,7 @@ struct PhoneForward* phoneBasesGetBase(PhoneBases pb, const char *id);
  * @return Wskaźnik do dodanej bazy, w przypadku problemów z pamięcią
  *         NULL.
  */
-struct PhoneForward* phoneBasesAddBase(PhoneBases pb, const char *id);
+struct PhoneForward *phoneBasesAddBase(PhoneBases pb, const char *id);
 
 /**
  * @brief Usuwa bazę przekierowań.
@@ -131,8 +132,6 @@ struct PhoneForward* phoneBasesAddBase(PhoneBases pb, const char *id);
  * @return true jeżeli podana baza istniała, w przeciwnym przypadku false.
  */
 bool phoneBasesDelBase(PhoneBases pb, const char *id);
-
-
 
 
 #endif //TELEFONY_PHONE_BASES_SYSTEM_H
