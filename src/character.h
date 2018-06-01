@@ -10,6 +10,11 @@
 #define MARATONFILMOWY_CHARACTER_H
 
 /**
+ * @brief Liczba cyfr w przyjętym systemie.
+ */
+#define CHARACTER_NUMBER_OF_DIGITS 12
+
+/**
  * @brief Znak kończący ciąg znaków w stylu c.
  */
 #define CHARACTER_STRING_TERMINATOR '\0'

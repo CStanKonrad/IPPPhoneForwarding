@@ -162,5 +162,16 @@ bool charSequenceEqualToString(CharSequence sequence, const char *str);
  */
 CharSequenceIterator charSequenceSequenceEnd(CharSequence sequence);
 
+/**
+ * @brief Sprawdza czy @p sequence zwiera z cyfr tylko te podane w @p digits.
+ * @param[in] sequence - wskaźnik na ciąg znaków.
+ * @param[in] digits - tablica wartości bool, gdzie @p digits[i] = true
+ *       oznacza, że cyfra o numerze i (kod_ascii - '0') jest dozwolona,
+ *       a false, że nie.
+ * @return true jeżeli cyfry występujące @p sequence to tylko te
+ *         podane w @p digits, false w przeciwnym przypadku.
+ */
+bool charSequenceCheckDigits(CharSequence sequence, const bool *digits);
+
 
 #endif //TELEFONY_CAHR_SEQUENCE_H

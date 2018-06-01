@@ -12,11 +12,12 @@
 #include "char_sequence.h"
 #include "stdfunc.h"
 #include "text.h"
+#include "character.h"
 
 /**
  * @brief Maksymalna liczba znaków w bloku (węźle) ciągu znaków.
  */
-#define CHAR_SEQUENCE_MAX_LETTERS_IN_BLOCK 100
+#define CHAR_SEQUENCE_MAX_LETTERS_IN_BLOCK 256
 
 /**
  * @brief Struktura opisująca element ciągu znaków (blok).
@@ -26,6 +27,13 @@ struct CharSequence {
      * @brief Litery w bloku.
      */
     char *letters;
+
+    /**
+     * @brief Cyfry występujące w @p letters.
+     * Jeżeli cyfra występuje to na bicie numer cyfra - '0' występuje 1,
+     * w przeciwnym wypadku 0.
+     */
+    size_t availableDigits;
 
     /**
      * @brief Następny element (blok) w ciągu.
@@ -79,6 +87,40 @@ static void charSequenceIteratorIncrement(CharSequenceIterator *it) {
 }
 
 /**
+ * @brief Resetuje informacje o występujących cyfrach.
+ * Po wykonaniu @p availableDigits mówi, że nie wystąpiła żadna cyfra.
+ * @param[out] availableDigits - wskaźnik na informacje o występujących cyfrach.
+ */
+static void charSequenceResetAvailableDigits(size_t *availableDigits) {
+    *availableDigits = 0;
+}
+
+/**
+ * @brief Ustawia informacje o występujących cyfrach.
+ * Po wykonaniu @p availableDigits mówi, że cyfra digit wystąpiła.
+ * @param[in, out] availableDigits - wskaźnik na informacje o występujących cyfrach.
+ * @param[in] digit - cyfra.
+ */
+static void charSequenceSetDigitAvailable(size_t *availableDigits,
+                                          char digit) {
+    assert(characterIsDigit(digit));
+    (*availableDigits) |= (((size_t)1) << ((size_t)(digit - '0')));
+}
+
+/**
+ * @brief Sprawdza czy według @p availableDigits cyfra @p digit wystąpiła.
+ * @param[in] availableDigits - wskaźnik na informacje o występujących cyfrach.
+ * @param[in] digit - cyfra.
+ * @return true jeżeli tak, false w przeciwnym wypadku.
+ */
+static bool charSequenceIsDigitAvailable(const size_t *availableDigits,
+                                         char digit) {
+    assert(characterIsDigit(digit));
+    return ((*availableDigits) & (((size_t)1) << ((size_t)(digit - '0')))) != 0;
+}
+
+
+/**
  * @brief inicjuje węzeł ciągu znaków.
  * @param[in, out] node - wskaźnik na węzeł.
  * @param[in] letters - ciąg znaków który ma być przechowywany w węźle.
@@ -87,6 +129,16 @@ static void charSequenceInitNewNode(CharSequence node, char *letters) {
     assert(node != NULL);
     node->letters = letters;
     node->next = NULL;
+
+    charSequenceResetAvailableDigits(&node->availableDigits);
+    if (letters != NULL) {
+        const char *i;
+        for (i = letters; *i != '\0'; i++) {
+            if (characterIsDigit(*i)) {
+                charSequenceSetDigitAvailable(&node->availableDigits, *i);
+            }
+        }
+    }
 }
 
 /**
@@ -135,6 +187,7 @@ void charSequenceMerge(CharSequence a, CharSequence b) {
         if (txt != NULL) {
             free(ptr->letters);
             ptr->letters = txt;
+            ptr->availableDigits |= b->availableDigits;
             ptr->next = b->next;
             charSequenceDeleteNode(b);
         } else {
@@ -192,7 +245,7 @@ CharSequence charSequenceSplitByIterator(CharSequence sequence,
                     newBlock->next = it->sequenceBlockPtr->next;
 
                     free(it->sequenceBlockPtr->letters);
-                    it->sequenceBlockPtr->letters = textA;
+                    charSequenceInitNewNode(it->sequenceBlockPtr, textA);
                     it->sequenceBlockPtr->next = NULL;
 
                     it->sequenceBlockPtr = newBlock;
@@ -267,6 +320,7 @@ CharSequence charSequenceFromCString(const char *str) {
                 } else {
                     copyText(str + i * CHAR_SEQUENCE_MAX_LETTERS_IN_BLOCK,
                              blocks[i]->letters, toAddSize);
+                    charSequenceInitNewNode(blocks[i], blocks[i]->letters);
                 }
             }
         }
@@ -366,5 +420,22 @@ CharSequenceIterator charSequenceSequenceEnd(CharSequence sequence) {
 
 char charSequenceGetChar(CharSequenceIterator *it) {
     return charSequenceIteratorGetChar(it);
+}
+
+bool charSequenceCheckDigits(CharSequence sequence, const bool *digits) {
+    CharSequence ptr = sequence;
+    size_t i;
+    char ch;
+    while (ptr != NULL) {
+        for (i = 0; i < CHARACTER_NUMBER_OF_DIGITS; i++) {
+            ch = (char)i + (char)'0';
+            if (charSequenceIsDigitAvailable(&ptr->availableDigits, ch)
+                && !digits[i]) {
+                return false;
+            }
+        }
+        ptr = ptr->next;
+    }
+    return true;
 }
 

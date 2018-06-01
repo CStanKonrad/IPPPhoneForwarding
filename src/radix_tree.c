@@ -712,20 +712,16 @@ static size_t radixTreeNonTrivialCountCount(size_t lettersLeft,
  * Sprawdza czy część numeru reprezentowana przez seq
  * składa się tylko z cyfr opisywanych przez @p availableDigits.
  * @param[in] seq - ciąg cyfr.
- * @param[in] availableDigits - dostępne cyfry.
+ * @param[in] availableDigits - dostępne cyfry. Tablica wartości bool,
+ *       gdzie @p digits[i] = true
+ *       oznacza, że cyfra o numerze i (kod_ascii - '0') jest dostępna,
+ *       a false, że nie.
  * @return true jeżeli tak, false w przeciwnym wypadku.
  */
 static bool radixTreeNonTrivialCountCheck(CharSequence seq,
                                           const bool *availableDigits) {
-    CharSequenceIterator it = charSequenceGetIterator(seq);
-    char ch;
-    while (charSequenceNextChar(&it, &ch)) {
-        if (!availableDigits[ch - '0']) {
-            return false;
-        }
-    }
 
-    return true;
+    return charSequenceCheckDigits(seq, availableDigits);
 }
 
 

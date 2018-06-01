@@ -786,7 +786,7 @@ const struct PhoneNumbers *phfwdReverse(struct PhoneForward *pf,
 static size_t phfwdNonTrivialCountExtractDigitsFromSet(const char *set,
                                                        bool *result) {
     size_t j;
-    for (j = 0; j < RADIX_TREE_NUMBER_OF_SONS; ++j) {
+    for (j = 0; j < CHARACTER_NUMBER_OF_DIGITS; ++j) {
         result[j] = false;
     }
 
@@ -798,7 +798,7 @@ static size_t phfwdNonTrivialCountExtractDigitsFromSet(const char *set,
         }
     }
 
-    for (j = 0; j < RADIX_TREE_NUMBER_OF_SONS; ++j) {
+    for (j = 0; j < CHARACTER_NUMBER_OF_DIGITS; ++j) {
         if (result[j]) {
             howMany++;
         }
@@ -811,7 +811,7 @@ size_t phfwdNonTrivialCount(struct PhoneForward *pf, const char *set, size_t len
     if (pf == NULL || set == NULL || len == 0) {
         return 0;
     } else {
-        bool availableDigits[RADIX_TREE_NUMBER_OF_SONS];
+        bool availableDigits[CHARACTER_NUMBER_OF_DIGITS];
         size_t howManyDigitsAvailable =
                 phfwdNonTrivialCountExtractDigitsFromSet(set, availableDigits);
 
@@ -823,7 +823,5 @@ size_t phfwdNonTrivialCount(struct PhoneForward *pf, const char *set, size_t len
                                             availableDigits,
                                             howManyDigitsAvailable);
         }
-
-
     }
 }

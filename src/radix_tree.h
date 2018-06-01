@@ -14,12 +14,13 @@
 
 #include <stddef.h>
 #include <stdbool.h>
+#include "character.h"
 #include "char_sequence.h"
 
 /**
  * @see RadixTreeNode
  */
-#define RADIX_TREE_NUMBER_OF_SONS 12
+#define RADIX_TREE_NUMBER_OF_SONS CHARACTER_NUMBER_OF_DIGITS
 
 /**
  * @see radixTreeFind
