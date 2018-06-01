@@ -690,22 +690,19 @@ void radixTreeCountDataFunction(void *ptrA, void *ptrB) {
  */
 static size_t radixTreeNonTrivialCountCount(size_t lettersLeft,
                                             size_t howManyDigitsAv) {
-    if (lettersLeft == 0) {
-        return 1;
-    } else if (lettersLeft == 1) {
-        return howManyDigitsAv;
-    } else {
-        if (lettersLeft % 2 == 1) {
-            return howManyDigitsAv
-                   * radixTreeNonTrivialCountCount(lettersLeft - 1,
-                                                   howManyDigitsAv);
-        } else {
-            return radixTreeNonTrivialCountCount(lettersLeft / 2,
-                                                 howManyDigitsAv)
-                   * radixTreeNonTrivialCountCount(lettersLeft / 2,
-                                                   howManyDigitsAv);
+
+
+    size_t result = 1;
+    size_t i = lettersLeft;
+    size_t exp = howManyDigitsAv;
+    for (i = lettersLeft; i != 0; i>>=1) {
+        if (i&(size_t)1) {
+            result *= exp;
         }
+        exp *= exp;
     }
+
+    return result;
 }
 
 /**
