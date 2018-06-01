@@ -57,7 +57,6 @@
  */
 #define PARSER_FAIL 0
 
-
 /**
  * @see parserNextType
  */
@@ -188,7 +187,6 @@ int parserReadOperator(Parser parser);
  *         true w przeciwnym wypadku.
  */
 bool parserReadIdentificator(Parser parser, Vector destination);
-
 
 /**
  * @brief Wczytuje numer.

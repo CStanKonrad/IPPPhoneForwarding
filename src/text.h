@@ -20,7 +20,6 @@
  */
 void copyText(const char *src, char *dest, size_t length);
 
-
 /**
  * @brief Duplikuje text.
  * @param[in] txt - tekst do zduplikowania.
@@ -29,14 +28,12 @@ void copyText(const char *src, char *dest, size_t length);
  */
 char *duplicateText(const char *txt);
 
-
 /**
  * @brief Wskaźnik na koniec.
  * @param[in] str - tekst.
  * @return Wskaźnik do koniec tekstu @p str.
  */
 const char *stringEnd(const char *str);
-
 
 /**
  * @brief Łączy dwa teksty.

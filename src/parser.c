@@ -226,6 +226,3 @@ size_t parserGetReadBytes(Parser parser) {
 bool parserIsCommentEofError(Parser parser) {
     return parser->isCommentEofError;
 }
-
-
-

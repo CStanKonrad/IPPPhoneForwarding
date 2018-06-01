@@ -64,7 +64,6 @@ static void radixTreeFreeNode(RadixTreeNode node) {
     free(node);
 }
 
-
 /**
  * @brief Inicjuje nowo powstałe drzewo.
  * #### Złożoność
@@ -84,7 +83,6 @@ static int radixTreeInitTree(RadixTree tree) {
     }
 }
 
-
 /**
  * @brief Tworzy węzeł drzewa i inicjuje go.
  * #### Złożoność
@@ -101,7 +99,6 @@ static RadixTreeNode radixTreeCreateNode() {
         return result;
     }
 }
-
 
 RadixTree radixTreeCreate() {
     RadixTree result = malloc(sizeof(struct RadixTreeNode));
@@ -357,7 +354,6 @@ int radixTreeFind(RadixTree tree, const char *txt, RadixTreeNode *ptr,
     return result;
 }
 
-
 size_t radixTreeHowManyChars(RadixTreeNode node) {
     return charSequenceLength(node->txt);
 }
@@ -379,7 +375,6 @@ static int radixTreeSplitNode(RadixTreeNode node, CharSequenceIterator *splitPtr
     if (newNode == NULL) {
         return RADIX_TREE_OPERATION_FAIL;
     } else {
-//todo
         newNode->txt = node->txt;
 
         CharSequence ptr = charSequenceSplitByIterator(node->txt, splitPtr);
