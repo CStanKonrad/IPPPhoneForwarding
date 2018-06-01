@@ -3,7 +3,7 @@
  * ciąg znaków.
  * @author Konrad Staniszewski
  * @copyright Konrad Staniszewski
- * @date 13.05.2018
+ * @date 01.06.2018
  */
 
 #ifndef TELEFONY_CAHR_SEQUENCE_H
@@ -67,7 +67,7 @@ bool charSequenceIteratorsEqual(CharSequenceIterator *a,
 
 /**
  * @brief Łączy ciągi.
- * Poszerza ciąg @p a o ciąg @p b, wskaźnik @p b
+ * Poszerza ciąg @p a o ciąg @p b,
  * ciąg @p b przestaje istnieć.
  * @param[in, out] a - wskaźnik na ciąg, aktualny po operacji.
  * @param[in, out] b - wskaźnik na ciąg, nieaktualny po operacji.
@@ -81,6 +81,7 @@ void charSequenceMerge(CharSequence a, CharSequence b);
  * @param[in, out] it - wskaźnik na punkt rozcięcia.
  * @return Wskaźnik na ciąg [it; ..],
  *         w przypadku problemów z pamięcią NULL.
+ * @remarks Zakłada, że punkt przecięcia generuje dwa niepuste ciągi.
  */
 CharSequence charSequenceSplitByIterator(CharSequence sequence,
                                          CharSequenceIterator *it);

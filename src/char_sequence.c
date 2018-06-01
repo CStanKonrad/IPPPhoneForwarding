@@ -3,7 +3,7 @@
  * ciąg znaków.
  * @author Konrad Staniszewski
  * @copyright Konrad Staniszewski
- * @date 13.05.2018
+ * @date 01.06.2018
  */
 
 #include <assert.h>
@@ -14,9 +14,9 @@
 #include "text.h"
 
 /**
- * @brief Maxymalna liczba znaków w bloku (węźle) ciągu znaków.
+ * @brief Maksymalna liczba znaków w bloku (węźle) ciągu znaków.
  */
-#define CHAR_SEQUENCE_MAX_LETTERS_IN_BLOCK 500
+#define CHAR_SEQUENCE_MAX_LETTERS_IN_BLOCK 100
 
 /**
  * @brief Struktura opisująca element ciągu znaków (blok).
@@ -61,10 +61,11 @@ static char charSequenceIteratorGetChar(CharSequenceIterator *it) {
  * @param[in, out] it  - wskaźnik na iterator ciągu znaków.
  */
 static void charSequenceIteratorIncrement(CharSequenceIterator *it) {
-    assert(it->charId < strlen(it->sequenceBlockPtr->letters));
     if (charSequenceIteratorEnd(it)) {
         return;
     } else {
+        assert(it->charId < strlen(it->sequenceBlockPtr->letters));
+
         if (it->sequenceBlockPtr->letters[it->charId + 1] != '\0') {
             it->charId++;
         } else {
@@ -80,7 +81,7 @@ static void charSequenceIteratorIncrement(CharSequenceIterator *it) {
 /**
  * @brief inicjuje węzeł ciągu znaków.
  * @param[in, out] node - wskaźnik na węzeł.
- * @param[in] letters - znak który ma być przechowywany w węźle.
+ * @param[in] letters - ciąg znaków który ma być przechowywany w węźle.
  */
 static void charSequenceInitNewNode(CharSequence node, char *letters) {
     assert(node != NULL);
@@ -119,6 +120,7 @@ bool charSequenceIteratorsEqual(CharSequenceIterator *a,
 
 void charSequenceMerge(CharSequence a, CharSequence b) {
     assert(a != NULL);
+    assert(b != NULL);
     CharSequence ptr = a;
 
     while (ptr->next != NULL) {
@@ -216,7 +218,7 @@ void charSequenceDelete(CharSequence node) {
 /**
  * @brief Funkcja pomocnicza do czyszczenia pamięci dla @p charSequenceFromCString.
  * @param[in] blocks - bloki do wyczyszczenia.
- * @param[in] last - numer ostatniego do wyczyszczenia.
+ * @param[in] last - numer ostatniego bloku do wyczyszczenia.
  */
 static void charSequenceFromCStringFreeBlocks(struct CharSequence **blocks,
                                               size_t last) {
@@ -362,7 +364,7 @@ CharSequenceIterator charSequenceSequenceEnd(CharSequence sequence) {
     return result;
 }
 
-
 char charSequenceGetChar(CharSequenceIterator *it) {
     return charSequenceIteratorGetChar(it);
 }
+

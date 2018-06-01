@@ -99,7 +99,7 @@ PhoneBases phoneBasesCreateNewPhoneBases();
  * @brief Usuwa strukturę przechowującą bazy przekierowań.
  * @param[in] pb - wskaźnik na strukturę.
  */
-void phoneBasesCreateDestroyPhoneBases(PhoneBases pb);
+void phoneBasesDestroyPhoneBases(PhoneBases pb);
 
 /**
  * @param[in] pb - wskaźnik na strukturę przechowującą bazy przekierowań.

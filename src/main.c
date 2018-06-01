@@ -36,7 +36,7 @@
 /**
  * @brief Infiks informacji o błędzie związanym z pamięcią.
  */
-#define MEMORY_ERROR_INFIX " not enough memory "
+#define MEMORY_ERROR_INFIX " MEMORY "
 
 /**
  * @brief Infiks informacji o błędzie operatora DEL.
@@ -53,7 +53,7 @@
 /**
  * @brief Infiks informacji o błędzie operatora >.
  */
-#define REDIRECT_OPERATOR_ERROR_SUFFIX \
+#define REDIRECT_OPERATOR_ERROR_INFIX \
     (CONCAT(" ", PARSER_OPERATOR_REDIRECT_STRING, " "))
 
 
@@ -79,12 +79,12 @@
 static PhoneBases bases = NULL;
 
 /**
- * @brief Wskaźniki na pomocniczy wektor do buforowania wejścia.
+ * @brief Wskaźniki na pomocniczy Vector do buforowania wejścia.
  */
 static Vector word1 = NULL;
 
 /**
- * @brief Wskaźniki na pomocniczy wektor do buforowania wejścia.
+ * @brief Wskaźniki na pomocniczy Vector do buforowania wejścia.
  */
 static Vector word2 = NULL;
 
@@ -107,7 +107,7 @@ static struct Parser parser;
 static void exit_and_clean(int exit_code) {
 
     if (bases != NULL) {
-        phoneBasesCreateDestroyPhoneBases(bases);
+        phoneBasesDestroyPhoneBases(bases);
     }
 
     if (word1 != NULL) {
@@ -526,14 +526,14 @@ static void readOperatorRedirectWord1() {
     checkParserError();
 
     if (currentBase == NULL) {
-        printErrorMessage(REDIRECT_OPERATOR_ERROR_SUFFIX, operatorPos);
+        printErrorMessage(REDIRECT_OPERATOR_ERROR_INFIX, operatorPos);
         exit_and_clean(ERROR_EXIT_CODE);
     }
     makeVectorCStringCompatible(word1);
     makeVectorCStringCompatible(word2);
 
     if (strcmp(vectorBegin(word1), vectorBegin(word2)) == 0) {
-        printErrorMessage(REDIRECT_OPERATOR_ERROR_SUFFIX, operatorPos);
+        printErrorMessage(REDIRECT_OPERATOR_ERROR_INFIX, operatorPos);
         exit_and_clean(ERROR_EXIT_CODE);
     }
 
@@ -626,7 +626,7 @@ static void readOperation(int nextType) {
  */
 int main() {
     initProgram();
-    //freopen("bigtest0.in", "r", stdin);
+
     while (true) {
         loopStepClear();
         skipSkipable();
@@ -636,8 +636,7 @@ int main() {
         checkParserError();
 
         readOperation(nextType);
-
-
     }
 
+    return 0;
 }

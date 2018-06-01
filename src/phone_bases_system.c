@@ -41,7 +41,7 @@ static size_t phoneBasesHashId(const char *id) {
 }
 
 /**
- * @brief Sprawdza czy pbi odpowiada bazie o identyfikatorze @p id.
+ * @brief Sprawdza czy @p pbi odpowiada bazie o identyfikatorze @p id.
  * @param[in] pbi - wskaźnik na strukturę przechowującą informacje
  *       o bazie przekierowań numerów.
  * @param[in] id - identyfikator (ciąg numerów w stylu c).
@@ -72,7 +72,6 @@ static void phoneBasesInitPhoneBases(PhoneBases pb) {
     pb->numberOfBases = 0;
 }
 
-
 PhoneBases phoneBasesCreateNewPhoneBases() {
     PhoneBases pb = malloc(sizeof(struct PhoneBases));
     if (pb == NULL) {
@@ -84,7 +83,7 @@ PhoneBases phoneBasesCreateNewPhoneBases() {
 }
 
 /**
- * @brief Usuwa wszystkie węzły występujące za @p node.
+ * @brief Usuwa wszystkie węzły występujące za @p node włącznie.
  * @param[in] node - wskaźnik na strukturę reprezentującą węzeł.
  */
 static void phoneBasesDeleteNodesList(PhoneBasesNode node) {
@@ -95,7 +94,7 @@ static void phoneBasesDeleteNodesList(PhoneBasesNode node) {
     }
 }
 
-void phoneBasesCreateDestroyPhoneBases(PhoneBases pb) {
+void phoneBasesDestroyPhoneBases(PhoneBases pb) {
     phoneBasesDeleteNodesList(pb->basesList);
     pb->basesList = NULL;
     free(pb);
@@ -116,7 +115,6 @@ struct PhoneForward *phoneBasesGetBase(PhoneBases pb, const char *id) {
     }
     return NULL;
 }
-
 
 struct PhoneForward *phoneBasesAddBase(PhoneBases pb, const char *id) {
     struct PhoneForward *result;
@@ -155,7 +153,6 @@ struct PhoneForward *phoneBasesAddBase(PhoneBases pb, const char *id) {
 
     }
 }
-
 
 bool phoneBasesDelBase(PhoneBases pb, const char *id) {
     PhoneBasesNode prev = NULL;

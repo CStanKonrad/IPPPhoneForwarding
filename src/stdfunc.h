@@ -25,11 +25,6 @@
 #define TO_STRING(x) #x
 
 /**
- * @brief Zamienia wartość x w ciąg znaków w stylu c.
- */
-#define TO_STRING2(x) TO_STRING(x)
-
-/**
  * @brief Wyłuskuje pierwszy znak z ciągu znaków w stylu c.
  */
 #define STRING_TO_CHAR(x) (*(x))

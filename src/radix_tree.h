@@ -119,7 +119,6 @@ struct RadixTreeNode {
  */
 RadixTree radixTreeCreate();
 
-
 /**
  * @brief Sprawdza, czy @p node jest korzeniem drzewa.
  * Sprzawdza, czy @p node jest węzłem reprezentującym drzewo.
@@ -270,7 +269,6 @@ void radixTreeBalance(RadixTreeNode node);
  *         w przypadku problemów z przydzieleniem pamięci zwraca NULL.
  */
 char *radixGetFullText(RadixTreeNode node);
-
 
 /**
  * @brief Przetwarza drzewo.
