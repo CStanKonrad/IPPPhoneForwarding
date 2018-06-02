@@ -118,6 +118,7 @@ eval "$cmd"
 checkExitCode
 
 LINES_TO_IGNORE=$(wc -l < $TMP_RAW_OUTPUT)
+echo "" >> $TMP_INPUT
 echo "? $NUMBER" >> $TMP_INPUT
 
 
@@ -130,7 +131,7 @@ ignoreLines $TMP_RAW_OUTPUT $LINES_TO_IGNORE $TMP_TAIL
 
 echo "NEW BASE " > $TMP_NEW_INPUT
 cat "$FILE" >> $TMP_NEW_INPUT
-
+echo "" >> $TMP_NEW_INPUT
 tr '\n' '?' < $TMP_RAW_OUTPUT >> $TMP_NEW_INPUT
 
 sed -i -e 's/?/ ?\n/g' $TMP_NEW_INPUT
