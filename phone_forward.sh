@@ -31,7 +31,7 @@ function isNumber {
 	then
 		echo 'false'
 	else
-		REGEX='^[0-9]+$'
+		REGEX='^[0-9:;]+$'
 		
 		if [[ $1 =~ $REGEX ]]
 		then
