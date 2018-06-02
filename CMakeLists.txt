@@ -42,7 +42,7 @@ set(SOURCE_FILES
     src/parser.h
     src/phone_bases_system.c
     src/phone_bases_system.h
-    src/main.c)
+    src/phone_forward_main.c)
 
 # Wskazujemy plik wykonywalny.
 add_executable(phone_forward ${SOURCE_FILES})
