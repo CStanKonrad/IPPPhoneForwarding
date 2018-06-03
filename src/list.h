@@ -32,41 +32,12 @@ typedef struct ListNode *ListNode;
 /**
  * @brief Struktura reprezentująca węzeł listy.
  */
-struct ListNode {
-    /**
-     * @brief Poprzedni węzeł.
-     * Wskaźnik na poprzedni w kolejności węzeł.
-     */
-    ListNode previous;
-
-    /**
-     * @brief Następny węzeł.
-     * Wskaźnik na następny w kolejności węzeł.
-     */
-    ListNode next;
-
-    /**
-     * @brief Przechowywany element.
-     */
-    LIST_ELEMENT_TYPE element;
-};
+struct ListNode;
 
 /**
  * @brief Struktura reprezentująca listę.
  */
-struct List {
-    /**
-     * @brief Strażnik (atrapa).
-     * Atrapa stojąca na początku listy.
-     */
-    struct ListNode begin;
-
-    /**
-     * @brief Strażnik (atrapa).
-     * Atrapa stojąca na końcu listy.
-     */
-    struct ListNode end;
-};
+struct List;
 
 /**
  * @brief Tworzy nową pustą listę.

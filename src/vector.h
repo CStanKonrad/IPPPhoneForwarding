@@ -40,25 +40,7 @@ typedef struct Vector *Vector;
 /**
  * @brief Struktura reprezentująca tablice o dynamicznym rozmiarze.
  */
-struct Vector {
-    /**
-     * @brief Aktualny rozmiar Vectora.
-     * Liczba używanych komórek tablicy array.
-     */
-    size_t size;
-
-    /**
-     * @brief Zadeklarowany rozmiar tablicy array.
-     * Liczba komórek tablicy array.
-     * @see array
-     */
-    size_t allocatedSize;
-
-    /**
-     * @brief Tablica przechowująca wstawiane elementy.
-     */
-    VECTOR_ELEMENT_TYPE *array;
-};
+struct Vector;
 
 /**
  * @brief Tworzy nowy Vector.

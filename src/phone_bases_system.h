@@ -14,11 +14,6 @@
 
 #include "phone_forward.h"
 
-/**
- * @see struct PhoneBaseInfo
- */
-typedef struct PhoneBaseInfo PhoneBaseInfo;
-
 
 /**
  * @see struct PhoneBases
@@ -26,65 +21,9 @@ typedef struct PhoneBaseInfo PhoneBaseInfo;
 typedef struct PhoneBases *PhoneBases;
 
 /**
- * @see struct PhoneBasesNode
- */
-typedef struct PhoneBasesNode *PhoneBasesNode;
-
-/**
- * @brief Informacje o bazie przekierowań.
- */
-struct PhoneBaseInfo {
-    /**
-     * @brief Wartość funkcji skrótu dla @p id.
-     */
-    size_t hash;
-
-    /**
-     * @brief Identyfikator bazy.
-     */
-    const char *id;
-
-    /**
-     * @brief Wskaźnik na bazę przekierowań.
-     */
-    struct PhoneForward *base;
-};
-
-
-/**
- *  @brief Węzeł listy baz przekierowań.
- *  @see PhoneBases.
- */
-struct PhoneBasesNode {
-    /**
-     * @brief Informacje o przechowywanej bazie.
-     */
-    PhoneBaseInfo baseInfo;
-
-    /**
-     * @brief Następny węzeł.
-     * Jeżeli nie ma następnego węzła to @p next
-     * ma wartość NULL.
-     */
-    PhoneBasesNode next;
-};
-
-
-/**
  * @brief Struktura przechowująca bazy przekierowań numerów telefonów.
  */
-struct PhoneBases {
-    /**
-     * @brief Pierwszy węzeł listy.
-     * NULL w przypadku przechowywania zera baz.
-     */
-    PhoneBasesNode basesList;
-
-    /**
-     * @brief Liczba przechowywanych baz.
-     */
-    size_t numberOfBases;
-};
+struct PhoneBases;
 
 /**
  * @brief Tworzy nową strukturę przechowującą bazy przekierowań.

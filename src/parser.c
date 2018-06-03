@@ -12,6 +12,7 @@
 #include "input.h"
 #include "parser.h"
 
+
 struct Parser parserCreateNew() {
     struct Parser result;
     result.readBytes = 0;

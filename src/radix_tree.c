@@ -26,6 +26,52 @@
  */
 #define RADIX_TREE_OPERATION_FAIL 0
 
+/**
+ * @brief Struktura reprezentująca węzeł drzewa.
+ */
+struct RadixTreeNode {
+    /**
+     * @brief Numer przechowywany przez węzeł.
+     * Numer odpowiadający krawędzi wchodzącej do węzła.
+     * Korzeń przechowuje wartość RADIX_TREE_ROOT_TXT.
+     * @see RADIX_TREE_ROOT_TXT
+     */
+    CharSequence txt;
+
+    /**
+     * @brief Długość @p txt.
+     */
+    size_t txtLength;
+
+    /**
+     * @brief Dane przechowywane przez węzeł.
+     */
+    void *data;
+
+    /**
+     * @brief Zmienna pomocnicza do przechodzenia drzewa bez użycia rekurencji,
+     * Zmienna wykorzystywana przez funkcje: @ref radixTreeFold,
+     * @ref radixTreeDeleteSubTree, @ref radixTreeDelete.
+     */
+    size_t foldI;
+
+    /**
+     * @see radixTreeNonTrivialCount
+     */
+    size_t helper;
+
+    /**
+     * @brief Synowie węzła w drzewie.
+     * @see RADIX_TREE_NUMBER_OF_SONS
+     */
+    RadixTreeNode sons[RADIX_TREE_NUMBER_OF_SONS];
+
+    /**
+     * @brief Ojciec węzła w drzewie.
+     */
+    RadixTreeNode father;
+};
+
 int radixTreeIsRoot(RadixTreeNode node) {
     return node->txt != NULL
            && charSequenceEqualToString(node->txt, RADIX_TREE_ROOT_TXT);

@@ -6,8 +6,8 @@
  * @date 01.06.2018
  */
 
-#ifndef TELEFONY_CAHR_SEQUENCE_H
-#define TELEFONY_CAHR_SEQUENCE_H
+#ifndef TELEFONY_CHAR_SEQUENCE_H
+#define TELEFONY_CHAR_SEQUENCE_H
 
 #include <stdbool.h>
 #include <stddef.h>
@@ -174,4 +174,4 @@ CharSequenceIterator charSequenceSequenceEnd(CharSequence sequence);
 bool charSequenceCheckDigits(CharSequence sequence, const bool *digits);
 
 
-#endif //TELEFONY_CAHR_SEQUENCE_H
+#endif //TELEFONY_CHAR_SEQUENCE_H

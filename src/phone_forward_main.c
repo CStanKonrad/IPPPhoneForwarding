@@ -128,7 +128,7 @@ static void exit_and_clean(int exit_code) {
  * @param[in] bytes - liczba wczytanych bajtów.
  */
 static void printErrorMessage(const char *infix, size_t bytes) {
-    fprintf(stderr, "%s%s%zu", BASIC_ERROR_MESSAGE, infix,
+    fprintf(stderr, "%s%s%zu\n", BASIC_ERROR_MESSAGE, infix,
             bytes);
 }
 
@@ -136,7 +136,7 @@ static void printErrorMessage(const char *infix, size_t bytes) {
  * @brief Wypisuje informacje o błędzie związanym z nieoczekiwanym końcem pliku.
  */
 static void printEofError() {
-    fprintf(stderr, "%s%s", BASIC_ERROR_MESSAGE, EOF_ERROR_SUFFIX);
+    fprintf(stderr, "%s%s\n", BASIC_ERROR_MESSAGE, EOF_ERROR_SUFFIX);
 }
 
 /**
@@ -438,7 +438,6 @@ static void readOperationReverse() {
  * Oczekuje, że poprzednio wczytano PARSER_OPERATOR_NONTRIVIAL.
  */
 static void readOperationNonTrivial() {
-    //size_t operatorPos = parserGetReadBytes(&parser);
     skipSkipable();
     checkEofError();
 
@@ -451,12 +450,6 @@ static void readOperationNonTrivial() {
             exit_and_clean(ERROR_EXIT_CODE);
         }
         checkParserError();
-
-
-        /*if (currentBase == NULL) {
-            printErrorMessage(QM_OPERATOR_ERROR_INFIX, operatorPos);
-            exit_and_clean(ERROR_EXIT_CODE);
-        }*/
 
         size_t len = vectorSize(word1);
         if (len <= 12) {
