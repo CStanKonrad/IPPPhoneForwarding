@@ -253,7 +253,7 @@ void radixTreeFold(RadixTree tree, void (*f)(void *, void *), void *fData);
  * @return Liczba nietrywialnych numerów modulo 2^(liczba_bitów_size_t).
  */
 size_t radixTreeNonTrivialCount(RadixTree tree, size_t goalLen,
-                         const bool *availableDigits,
-                         size_t howManyDigitsAvailable);
+                                const bool *availableDigits,
+                                size_t howManyDigitsAvailable);
 
 #endif //TELEFONY_RADIX_TREE_H

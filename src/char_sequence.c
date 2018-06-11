@@ -9,6 +9,7 @@
 #include <assert.h>
 #include <string.h>
 #include <stdbool.h>
+#include <stdlib.h>
 #include "char_sequence.h"
 #include "stdfunc.h"
 #include "text.h"
@@ -104,7 +105,7 @@ static void charSequenceResetAvailableDigits(size_t *availableDigits) {
 static void charSequenceSetDigitAvailable(size_t *availableDigits,
                                           char digit) {
     assert(characterIsDigit(digit));
-    (*availableDigits) |= (((size_t)1) << ((size_t)(digit - '0')));
+    (*availableDigits) |= (((size_t) 1) << ((size_t) (digit - '0')));
 }
 
 /**
@@ -116,7 +117,7 @@ static void charSequenceSetDigitAvailable(size_t *availableDigits,
 static bool charSequenceIsDigitAvailable(const size_t *availableDigits,
                                          char digit) {
     assert(characterIsDigit(digit));
-    return ((*availableDigits) & (((size_t)1) << ((size_t)(digit - '0')))) != 0;
+    return ((*availableDigits) & (((size_t) 1) << ((size_t) (digit - '0')))) != 0;
 }
 
 
@@ -428,7 +429,7 @@ bool charSequenceCheckDigits(CharSequence sequence, const bool *digits) {
     char ch;
     while (ptr != NULL) {
         for (i = 0; i < CHARACTER_NUMBER_OF_DIGITS; i++) {
-            ch = (char)i + (char)'0';
+            ch = (char) i + (char) '0';
             if (charSequenceIsDigitAvailable(&ptr->availableDigits, ch)
                 && !digits[i]) {
                 return false;

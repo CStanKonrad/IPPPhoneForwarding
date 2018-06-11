@@ -171,7 +171,6 @@ RadixTree radixTreeCreate() {
  * @return Numer syna.
  */
 static size_t radixTreeConvertCharToNumber(char sonCh) {
-    //assert(sonCh <= '9' && sonCh >= '0');
     return (size_t) sonCh - (size_t) '0';
 }
 
@@ -741,8 +740,8 @@ static size_t radixTreeNonTrivialCountCount(size_t lettersLeft,
     size_t result = 1;
     size_t i = lettersLeft;
     size_t exp = howManyDigitsAv;
-    for (i = lettersLeft; i != 0; i>>=1) {
-        if (i&(size_t)1) {
+    for (i = lettersLeft; i != 0; i >>= 1) {
+        if (i & (size_t) 1) {
             result *= exp;
         }
         exp *= exp;

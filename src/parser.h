@@ -109,7 +109,6 @@
 #define PARSER_ELEMENT_TYPE_OPERATOR_NONTRIVIAL 8
 
 
-
 /**
  * @see struct Parser
  */

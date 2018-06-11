@@ -775,6 +775,7 @@ const struct PhoneNumbers *phfwdReverse(struct PhoneForward *pf,
         return phfwdGetReverse(pf->backward, num);
     }
 }
+
 /**
  * @brief Wyłuskuje cyfry z ciągu set.
  * @param[in] set - ciąg ze znakami

@@ -54,8 +54,8 @@ int characterIsGraph(int characterCode) {
 
 int characterIsDigit(int characterCode) {
     return isdigit(characterCode)
-            || characterCode == ':'
-            || characterCode == ';';
+           || characterCode == ':'
+           || characterCode == ';';
 }
 
 int characterIsLetter(int characterCode) {

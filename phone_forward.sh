@@ -1,4 +1,4 @@
- #/bin/bash
+ #!/bin/bash
 
 #Wypisuje wiadomość zawartą pod $1.
 #Usuwa pliki których nazwy znajdują się pod argumentami $i gdzie i >= 2.
