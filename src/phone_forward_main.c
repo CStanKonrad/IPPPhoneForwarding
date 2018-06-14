@@ -58,6 +58,13 @@
 
 
 /**
+ * @brief Infiks informacji o błędzie operatora @.
+ */
+#define NONTRIVIAL_OPERATOR_ERROR_INFIX \
+    (CONCAT(" ", PARSER_OPERATOR_NONTRIVIAL_STRING, " "))
+
+
+/**
  * @brief Kod błędu zwracany przez program.
  */
 #define ERROR_EXIT_CODE 1
@@ -438,6 +445,7 @@ static void readOperationReverse() {
  * Oczekuje, że poprzednio wczytano PARSER_OPERATOR_NONTRIVIAL.
  */
 static void readOperationNonTrivial() {
+    size_t operatorPos = parserGetReadBytes(&parser);
     skipSkipable();
     checkEofError();
 
@@ -450,6 +458,11 @@ static void readOperationNonTrivial() {
             exit_and_clean(ERROR_EXIT_CODE);
         }
         checkParserError();
+
+        if (currentBase == NULL) {
+            printErrorMessage(NONTRIVIAL_OPERATOR_ERROR_INFIX, operatorPos);
+            exit_and_clean(ERROR_EXIT_CODE);
+        }
 
         size_t len = vectorSize(word1);
         if (len <= 12) {

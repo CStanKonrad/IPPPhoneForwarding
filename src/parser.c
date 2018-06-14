@@ -8,6 +8,7 @@
 
 #include <assert.h>
 #include <stdint.h>
+#include <ctype.h>
 #include "character.h"
 #include "input.h"
 #include "parser.h"
@@ -201,15 +202,15 @@ int parserReadOperator(Parser parser) {
 /**
  * @param[in] characterCode - kod znaku
  * @return Niezerowa wartość jeżeli @p characterCode jest literą
- *         lub cyfrą.
+ *         lub cyfrą dzeisiętną.
  */
-static int parserIsLetterOrDigit(int characterCode) {
-    return characterIsLetter(characterCode) || characterIsDigit(characterCode);
+static int parserIsLetterOrDecimalDigit(int characterCode) {
+    return characterIsLetter(characterCode) || isdigit(characterCode);
 }
 
 bool parserReadIdentificator(Parser parser, Vector destination) {
     size_t prefSize = vectorSize(destination);
-    int readStatus = inputReadWhile(parserIsLetterOrDigit, SIZE_MAX, destination);
+    int readStatus = inputReadWhile(parserIsLetterOrDecimalDigit, SIZE_MAX, destination);
     parser->readBytes += vectorSize(destination) - prefSize;
 
     return readStatus == INPUT_READ_SUCCESS;
